@@ -1,11 +1,9 @@
 import { Router } from "express";
+import { getCategoriesAll } from "../controllers/categoryController.js";
 
 const routes = Router();
 
-// routes.use("/products", hanldeProduct...)
-// routes.use("/products", hanldeProduct...)
-// routes.use("/products", hanldeProduct...)
-// routes.use("/products", hanldeProduct...)
-// routes.use("/products", hanldeProduct...)
+// Routes category
+routes.get("/categories", getCategoriesAll);
 
 export default routes;
