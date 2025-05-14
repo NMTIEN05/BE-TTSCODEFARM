@@ -62,3 +62,57 @@ export const deleteCategory = async (req, res) => {
     res.status(500).json({ message: "Xoá thất bại", error });
   }
 };
+
+// Tạo mới danh mục
+export const createCategory = async (req, res) => {
+  const { name, description } = req.body;
+
+  try {
+    // Kiểm tra xem danh mục đã tồn tại chưa
+    const checkName = await Category.findOne({ name });
+    if (checkName) {
+      return res.status(400).json({ message: "Danh mục đã tồn tại" });
+    }
+
+    // Tạo mới danh mục
+    const newCategory = await new Category({ name, description }).save();
+    res
+      .status(201)
+      .json({ message: "Tạo danh mục thành công", data: newCategory });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ message: "Tạo danh mục thất bại", error });
+  }
+};
+
+// Cập nhật danh mục
+export const updateCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name, description } = req.body;
+
+  try {
+    const updatedCategory = await Category.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          name,
+          description,
+          updated_at: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedCategory) {
+      return res.status(404).json({ message: "Không tìm thấy danh mục" });
+    }
+
+    res.json({
+      message: "Cập nhật danh mục thành công",
+      data: updatedCategory,
+    });
+  } catch (error) {
+    res.status(400).json({ message: "Cập nhật thất bại", error });
+  }
+};
+
