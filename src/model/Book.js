@@ -1,35 +1,55 @@
 import mongoose from "mongoose";
 
+const bookSchema = new mongoose.Schema(
+  {
+    category_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    author_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Author",
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    publisher: {
+      type: String,
+      required: true,
+    },
+    publish_year: {
+      type: Date,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    stock: {
+      type: Number,
+      required: true,
+    },
+    cover_image: {
+      type: String,
+      required: true,
+    },
+    is_available: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
-const bookScheman = new mongoose.Schema({
-  category_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    require: true,
-  },
-  title: {
-    type: String,
-    require: true,
-    trim: true,
-  },
-  author_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Author",
-    ref: true,
-  },
-  publisher: {
-    type: String,
-  },
-  publisher_year:  {
-    type: String,
-  },
-  description: {type: String},
-  price: {type: String,require: true},
-  stock_quantity: {type: Boolean, default:0},
-  cover_image: {type:String},
-  is_available: {type: Boolean,default: true},
-
-},{timestamps: true, versionKey:false});
-
-const  Book = mongoose.model("Book",bookScheman);
+const Book = mongoose.model("Book", bookSchema);
 export default Book;

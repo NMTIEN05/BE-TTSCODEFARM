@@ -4,6 +4,7 @@ import connectDB from "./src/configs/db.js"; // Đảm bảo import đúng conne
 import router from "./src/routes/index.js";
 import dotenv from "dotenv";
 import authRouter from "./src/routes/authRouter.js";
+import setupSwagger from "./src/configs/swaggerConfig.js";
 
 // Load biến môi trường
 dotenv.config();
@@ -16,11 +17,12 @@ app.use(express.json());
 connectDB();
 // API routes
 app.use("/api", router);
-app.use("/auth", authRouter); 
+app.use("/auth", authRouter);
 
-
+setupSwagger(app);
 // Khởi động server
 const PORT = process.env.PORT || 8888;
 app.listen(PORT, () => {
   console.log(`Server is running on: http://localhost:${PORT}/api`);
+  console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
 });

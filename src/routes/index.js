@@ -4,7 +4,6 @@ import {
   deleteCategory,
   getCategorys,
   getCategoryById,
-  getCategorys,
   updateCategory,
 } from "../controllers/categoryController.js";
 import {
