@@ -1,18 +1,18 @@
 // src/models/Category.model.js
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const categorySchema = new mongoose.Schema({
-  name: { 
-    type: String, required: true 
-   },
-  description: {
-    type: String,
-    
+const categorySchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
   },
-  image_url:{ 
-    type: String,
-  }
-}, { timestamps: true,versionKey:false });
+  { timestamps: true, versionKey: false }
+);
 
-const Category = mongoose.model('Category', categorySchema);
+const Category = mongoose.model("Category", categorySchema);
 export default Category;

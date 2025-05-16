@@ -2,8 +2,8 @@ import {
   errorResponse,
   successResponse,
 } from "../middlewares/responseHandler.js";
-import Book from "../models/Book.js";
-import Category from "../models/Category.js";
+import Book from "../model/Book.js";
+import Category from "../model/Category.js";
 import { ValidateCategory } from "../validate/categoryValidate.js";
 
 export const getCategorys = async (req, res) => {
