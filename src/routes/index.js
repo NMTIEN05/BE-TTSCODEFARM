@@ -14,28 +14,28 @@ import {
   updateAuthor,
 } from "../controllers/authorController.js";
 
-const routes = express.Router();
+const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
-routes.get("/ping", (req, res) => {
+router.get("/ping", (req, res) => {
   console.log("Frontend đã kết nối thành công");
   res.json({ message: "Backend kết nối thành công!" });
 });
 
 // Bỏ route đăng ký người dùng /register
 
-// Routes category
-routes.get("/categories", getCategorys);
-routes.get("/categories/:id", getCategoryById);
-routes.delete("/categories/:id", deleteCategory);
-routes.post("/categories", createCategory);
-routes.put("/categories/:id", updateCategory);
+// router category
+router.get("/categories", getCategorys);
+router.get("/categories/:id", getCategoryById);
+router.delete("/categories/:id", deleteCategory);
+router.post("/categories/add", createCategory);
+router.put("/categories/edit/:id", updateCategory);
 
-// Authors routes
-routes.get("/authors", getAuthors);
-routes.get("/authors/:id", getAuthorById);
-routes.post("/authors/add", createAuthor);
-routes.put("/authors/edit/:id", updateAuthor);
-routes.delete("/authors/:id", deleteAuthor);
+// Authors router
+router.get("/authors", getAuthors);
+router.get("/authors/:id", getAuthorById);
+router.post("/authors/add", createAuthor);
+router.put("/authors/edit/:id", updateAuthor);
+router.delete("/authors/:id", deleteAuthor);
 
-export default routes;
+export default router;

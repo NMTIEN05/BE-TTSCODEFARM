@@ -4,6 +4,7 @@ import {
 } from "../middlewares/responseHandler.js";
 import Authors from "../model/Author.js";
 import Book from "../model/Book.js";
+import { AuthorValidate } from "../validate/authorValidate.js";
 
 export const getAuthors = async (req, res) => {
   const {
