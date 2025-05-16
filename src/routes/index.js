@@ -7,6 +7,13 @@ import {
   getCategorys,
   updateCategory,
 } from "../controllers/categoryController.js";
+import {
+  createAuthor,
+  deleteAuthor,
+  getAuthorById,
+  getAuthors,
+  updateAuthor,
+} from "../controllers/authorController.js";
 
 const routes = express.Router();
 
@@ -24,5 +31,12 @@ routes.get("/categories/:id", getCategoryById);
 routes.delete("/categories/:id", deleteCategory);
 routes.post("/categories", createCategory);
 routes.put("/categories/:id", updateCategory);
+
+// Authors routes
+routes.get("/authors", getAuthors);
+routes.get("/authors/:id", getAuthorById);
+routes.post("/authors/add", createAuthor);
+routes.put("/authors/edit/:id", updateAuthor);
+routes.delete("/authors/:id", deleteAuthor);
 
 export default routes;

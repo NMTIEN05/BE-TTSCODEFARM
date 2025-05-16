@@ -78,3 +78,75 @@ export const deleteAuthor = async (req, res) => {
     return errorResponse(res, "Lỗi server khi xoá tác giả");
   }
 };
+
+export const createAuthor = async (req, res) => {
+  const { name, bio, birth_date, nationality } = req.body;
+  try {
+    // Validate
+    const { error } = AuthorValidate.validate(req.body);
+    if (error) {
+      return errorResponse(
+        res,
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+    const existingAuthor = await Authors.findOne({ name });
+    if (existingAuthor) {
+      return errorResponse(res, "Tác giả đã tồn tại", 400);
+    }
+    const newAuthor = new Authors({
+      name,
+      bio,
+      birth_date,
+      nationality,
+    });
+    await newAuthor.save();
+    return successResponse(
+      res,
+      { data: newAuthor },
+      "Tạo tác giả thành công",
+      201
+    );
+  } catch (error) {
+    return errorResponse(res, "Lỗi server khi tạo tác giả");
+  }
+};
+
+export const updateAuthor = async (req, res) => {
+  const { id } = req.params;
+  const { name, bio, birth_date, nationality } = req.body;
+  try {
+    // Validate
+    const { error } = AuthorValidate.validate(req.body);
+    if (error) {
+      return errorResponse(
+        res,
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+    const updatedAuthor = await Authors.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          name,
+          bio,
+          birth_date,
+          nationality,
+        },
+      },
+      { new: true }
+    );
+    if (!updatedAuthor) {
+      return errorResponse(res, "Không tìm thấy tác giả", 404);
+    }
+    return successResponse(
+      res,
+      { data: updatedAuthor },
+      "Cập nhật tác giả thành công"
+    );
+  } catch (error) {
+    return errorResponse(res, "Lỗi server khi cập nhật tác giả");
+  }
+};
