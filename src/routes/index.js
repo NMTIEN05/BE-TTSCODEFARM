@@ -1,4 +1,12 @@
 import express from "express";
+import { Router } from "express";
+import {
+  createCategory,
+  deleteCategory,
+  getCategoriesAll,
+  getCategoryById,
+  updateCategory,
+} from "../controllers/categoryController.js";
 
 const router = express.Router();
 
@@ -10,4 +18,11 @@ router.get("/ping", (req, res) => {
 
 // Bỏ route đăng ký người dùng /register
 
-export default router;
+// Routes category
+routes.get("/categories", getCategoriesAll);
+routes.get("/categories/:id", getCategoryById);
+routes.delete("/categories/:id", deleteCategory);
+routes.post("/categories", createCategory);
+routes.put("/categories/:id", updateCategory);
+
+export default routes;
