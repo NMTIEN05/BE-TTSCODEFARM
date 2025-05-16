@@ -3,8 +3,9 @@ import { Router } from "express";
 import {
   createCategory,
   deleteCategory,
-  getCategoriesAll,
+  getCategory,
   getCategoryById,
+  getCategorys,
   updateCategory,
 } from "../controllers/categoryController.js";
 
@@ -19,7 +20,7 @@ router.get("/ping", (req, res) => {
 // Bỏ route đăng ký người dùng /register
 
 // Routes category
-routes.get("/categories", getCategoriesAll);
+routes.get("/categories", getCategorys);
 routes.get("/categories/:id", getCategoryById);
 routes.delete("/categories/:id", deleteCategory);
 routes.post("/categories", createCategory);
