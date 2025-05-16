@@ -1,18 +1,17 @@
 import express from "express";
-import { Router } from "express";
 import {
   createCategory,
   deleteCategory,
-  getCategory,
+  getCategorys,
   getCategoryById,
   getCategorys,
   updateCategory,
 } from "../controllers/categoryController.js";
 
-const router = express.Router();
+const routes = express.Router();
 
 // Route kiểm tra kết nối từ frontend
-router.get("/ping", (req, res) => {
+routes.get("/ping", (req, res) => {
   console.log("Frontend đã kết nối thành công");
   res.json({ message: "Backend kết nối thành công!" });
 });
