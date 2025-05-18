@@ -15,6 +15,8 @@ import {
 } from "../controllers/authorController.js";
 import {
   createBook,
+  getBookById,
+  getBooks,
 } from "../controllers/bookController.js";
 const router = express.Router();
 
@@ -42,5 +44,6 @@ router.delete("/authors/:id", deleteAuthor);
 
 
 router.post("/book/add",createBook);
-
+router.get("/books",getBooks);
+router.get("/books/:id",getBookById);
 export default router;
