@@ -18,7 +18,11 @@ import {
   getBookById,
   getBooks,
 } from "../controllers/bookController.js";
-import { getCoupons } from "../controllers/couponController.js";
+import {
+  createCoupon,
+  getCoupons,
+  updateCoupon,
+} from "../controllers/couponController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -50,4 +54,6 @@ router.get("/books/:id", getBookById);
 
 // Coupons router
 router.get("/coupons", getCoupons);
+router.post("/coupons/add", createCoupon);
+router.put("/coupons/edit/:id", updateCoupon);
 export default router;
