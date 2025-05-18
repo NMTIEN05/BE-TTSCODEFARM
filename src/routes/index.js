@@ -15,8 +15,10 @@ import {
 } from "../controllers/authorController.js";
 import {
   createBook,
+  deleteBook,
   getBookById,
   getBooks,
+  updateBook,
 } from "../controllers/bookController.js";
 const router = express.Router();
 
@@ -43,7 +45,9 @@ router.put("/authors/edit/:id", updateAuthor);
 router.delete("/authors/:id", deleteAuthor);
 
 
-router.post("/book/add",createBook);
+router.post("/books/add",createBook);
 router.get("/books",getBooks);
 router.get("/books/:id",getBookById);
+router.put("/books/:id",updateBook)
+router.delete("/books/:id", deleteBook);
 export default router;
