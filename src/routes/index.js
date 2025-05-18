@@ -13,7 +13,9 @@ import {
   getAuthors,
   updateAuthor,
 } from "../controllers/authorController.js";
-
+import {
+  createBook,
+} from "../controllers/bookController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -37,5 +39,8 @@ router.get("/authors/:id", getAuthorById);
 router.post("/authors/add", createAuthor);
 router.put("/authors/edit/:id", updateAuthor);
 router.delete("/authors/:id", deleteAuthor);
+
+
+router.post("/book/add",createBook);
 
 export default router;

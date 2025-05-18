@@ -32,13 +32,13 @@ const bookSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    stock: {
+    stock_quantity: {
       type: Number,
       required: true,
     },
     cover_image: {
       type: String,
-      required: true,
+      
     },
     is_available: {
       type: Boolean,
