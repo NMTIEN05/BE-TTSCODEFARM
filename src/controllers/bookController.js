@@ -72,3 +72,73 @@ export const createBook = async (req, res) => {
     return errorResponse(res, `Lỗi server khi tạo sách: ${error.message}`, 500);
   }
 };
+// Lấy danh sách sách
+export const getBooks = async (req, res) => {
+  const {
+    offset = 0,
+    limit = 5,
+    title,
+    category_id,
+    author_id,
+    sortBy = "created_at",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (title) {
+    query.title = { $regex: title, $options: "i" }; // Tìm kiếm không phân biệt hoa thường
+  }
+  if (category_id) {
+    query.category_id = category_id;
+  }
+  if (author_id) {
+    query.author_id = author_id;
+  }
+
+  const sortOrder = order === "asc" ? 1 : -1;
+  const sortOptions = { [sortBy]: sortOrder };
+
+  try {
+    const books = await Book.find(query)
+      .populate("category_id", "name") // Lấy tên danh mục
+      .populate("author_id", "name") // Lấy tên tác giả
+      .sort(sortOptions)
+      .skip(parseInt(offset))
+      .limit(parseInt(limit));
+
+    const total = await Book.countDocuments(query);
+
+    return successResponse(
+      res,
+      {
+        data: books,
+        offset: parseInt(offset),
+        limit: parseInt(limit),
+        totalItems: total,
+        hasMore: parseInt(offset) + parseInt(limit) < total,
+      },
+      "Lấy danh sách sách thành công"
+    );
+  } catch (error) {
+    return errorResponse(res, "Lỗi server khi lấy danh sách sách", 500);
+  }
+};
+
+// Lấy thông tin sách theo ID
+export const getBookById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const book = await Book.findOne({ _id: id })
+      .populate("category_id", "name")
+      .populate("author_id", "name");
+
+    if (!book) {
+      return errorResponse(res, "Không tìm thấy sách", 404);
+    }
+
+    return successResponse(res, { data: book }, "Lấy thông tin sách thành công");
+  } catch (error) {
+    return errorResponse(res, "Lỗi server khi lấy thông tin sách", 500);
+  }
+};
