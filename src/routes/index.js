@@ -18,6 +18,7 @@ import {
   getBookById,
   getBooks,
 } from "../controllers/bookController.js";
+import { getCoupons } from "../controllers/couponController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -42,8 +43,11 @@ router.post("/authors/add", createAuthor);
 router.put("/authors/edit/:id", updateAuthor);
 router.delete("/authors/:id", deleteAuthor);
 
+// Books router
+router.post("/book/add", createBook);
+router.get("/books", getBooks);
+router.get("/books/:id", getBookById);
 
-router.post("/book/add",createBook);
-router.get("/books",getBooks);
-router.get("/books/:id",getBookById);
+// Coupons router
+router.get("/coupons", getCoupons);
 export default router;
