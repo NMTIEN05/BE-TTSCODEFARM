@@ -25,6 +25,7 @@ import {
   deleteCoupon,
   getCouponById,
   getCoupons,
+  toggleCouponStatus,
   updateCoupon,
 } from "../controllers/couponController.js";
 const router = express.Router();
@@ -64,4 +65,5 @@ router.get("/coupons/:id", getCouponById);
 router.post("/coupons/add", createCoupon);
 router.put("/coupons/edit/:id", updateCoupon);
 router.delete("/coupons/:id", deleteCoupon);
+router.patch("/coupons/toggle/:id", toggleCouponStatus);
 export default router;
