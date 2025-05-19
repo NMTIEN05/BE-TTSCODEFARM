@@ -51,6 +51,8 @@ router.delete("/authors/:id", deleteAuthor);
 router.post("/book/add", createBook);
 router.get("/books", getBooks);
 router.get("/books/:id", getBookById);
+router.put("/authors/edit/:id", updateAuthor);
+router.delete("/authors/:id", deleteAuthor);
 
 // Coupons router
 router.get("/coupons", getCoupons);
