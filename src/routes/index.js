@@ -20,6 +20,8 @@ import {
 } from "../controllers/bookController.js";
 import {
   createCoupon,
+  deleteCoupon,
+  getCouponById,
   getCoupons,
   updateCoupon,
 } from "../controllers/couponController.js";
@@ -56,6 +58,8 @@ router.delete("/authors/:id", deleteAuthor);
 
 // Coupons router
 router.get("/coupons", getCoupons);
+router.get("/coupons/:id", getCouponById);
 router.post("/coupons/add", createCoupon);
 router.put("/coupons/edit/:id", updateCoupon);
+router.delete("/coupons/:id", deleteCoupon);
 export default router;

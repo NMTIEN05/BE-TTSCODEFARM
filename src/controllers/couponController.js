@@ -109,3 +109,37 @@ export const updateCoupon = async (req, res) => {
     return errorResponse(res, "Cập nhật mã giảm giá thất bại", 400);
   }
 };
+
+// Lấy mã giảm giá theo ID
+export const getCouponById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const coupon = await Coupon.findById(id);
+    if (!coupon) {
+      return errorResponse(res, "Không tìm thấy mã giảm giá", 404);
+    }
+    return successResponse(res, { data: coupon }, "Lấy mã giảm giá thành công");
+  } catch (error) {
+    return errorResponse(res, "Lỗi server khi lấy mã giảm giá");
+  }
+};
+
+// Xoá mã giảm giá
+export const deleteCoupon = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deleted = await Coupon.findByIdAndDelete(id);
+    if (!deleted) {
+      return errorResponse(res, "Không tìm thấy mã giảm giá", 404);
+    }
+
+    return successResponse(
+      res,
+      { data: deleted },
+      "Xoá mã giảm giá thành công"
+    );
+  } catch (error) {
+    return errorResponse(res, "Xoá mã giảm giá thất bại");
+  }
+};
