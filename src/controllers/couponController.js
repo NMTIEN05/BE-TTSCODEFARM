@@ -143,3 +143,30 @@ export const deleteCoupon = async (req, res) => {
     return errorResponse(res, "Xoá mã giảm giá thất bại");
   }
 };
+
+export const toggleCouponStatus = async (req, res) => {
+  const { id } = req.params;
+  const { is_active } = req.body;
+
+  try {
+    const updatedCoupon = await Coupon.findByIdAndUpdate(
+      id,
+      { is_active },
+      { new: true }
+    );
+
+    if (!updatedCoupon) {
+      return errorResponse(res, "Không tìm thấy mã giảm giá", 404);
+    }
+
+    return successResponse(
+      res,
+      { data: updatedCoupon },
+      `Mã giảm giá đã được ${
+        is_active ? "kích hoạt" : "vô hiệu hóa"
+      } thành công`
+    );
+  } catch (error) {
+    return errorResponse(res, "Cập nhật trạng thái mã giảm giá thất bại", 400);
+  }
+};
