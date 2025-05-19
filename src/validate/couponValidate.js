@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const ValidateCoupon = Joi.object({
+export const couponValidate = Joi.object({
   code: Joi.string().trim().min(3).max(20).required().messages({
     "string.empty": "Mã giảm giá không được để trống",
     "string.min": "Mã giảm giá phải có ít nhất 3 ký tự",

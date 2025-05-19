@@ -1,17 +1,18 @@
-export const successResponse = (
-  res,
-  data = [],
-  message = "",
-  statusCode = 200
-) => {
-  return res.status(statusCode).json({
-    message,
-    ...data,
-  });
+const responseHandler = (req, res, next) => {
+  res.success = (data = {}, message = "", statusCode = 200) => {
+    return res.status(statusCode).json({
+      message,
+      data,
+    });
+  };
+
+  res.error = (error = "", statusCode = 500) => {
+    return res.status(statusCode).json({
+      message: error,
+    });
+  };
+
+  next();
 };
 
-export const errorResponse = (res, error = "", statusCode = 500) => {
-  return res.status(statusCode).json({
-    message: error,
-  });
-};
+export default responseHandler;
