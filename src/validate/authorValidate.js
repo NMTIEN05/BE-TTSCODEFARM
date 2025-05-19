@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const AuthorValidate = Joi.object({
+export const authorValidate = Joi.object({
   name: Joi.string().required().messages({
     "string.empty": "Tên tác giả không được để trống",
     "any.required": "Tên tác giả là bắt buộc",

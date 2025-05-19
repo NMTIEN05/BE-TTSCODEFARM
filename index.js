@@ -5,6 +5,7 @@ import router from "./src/routes/index.js";
 import dotenv from "dotenv";
 import authRouter from "./src/routes/authRouter.js";
 import setupSwagger from "./src/configs/swaggerConfig.js";
+import responseHandler from "./src/middlewares/responseHandler.js";
 
 // Load biến môi trường
 dotenv.config();
@@ -15,6 +16,9 @@ app.use(express.json());
 
 // Kết nối MongoDB
 connectDB();
+// Middleware để xử lý phản hồi
+app.use(responseHandler);
+
 // API routes
 app.use("/api", router);
 app.use("/auth", authRouter);

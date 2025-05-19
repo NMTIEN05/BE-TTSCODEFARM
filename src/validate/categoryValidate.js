@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const ValidateCategory = Joi.object({
+export const categoryValidate = Joi.object({
   name: Joi.string().required().messages({
     "string.empty": "Tên danh mục không được để trống",
     "any.required": "Tên danh mục là bắt buộc",

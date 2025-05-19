@@ -1,19 +1,18 @@
-import {
-  errorResponse,
-  successResponse,
-} from "../middlewares/responseHandler.js";
 import Book from "../model/Book.js";
 import Category from "../model/Category.js";
-import { ValidateCategory } from "../validate/categoryValidate.js";
+import { categoryValidate } from "../validate/categoryValidate.js";
 
 export const getCategorys = async (req, res) => {
-  const {
-    offset = 0,
-    limit = 5,
+  let {
+    offset = "0",
+    limit = "5",
     name,
     sortBy = "created_at",
     order = "desc",
   } = req.query;
+
+  const page = Math.max(parseInt(offset), 0);
+  const perPage = Math.max(parseInt(limit), 1);
 
   const query = {};
   if (name) {
@@ -26,116 +25,116 @@ export const getCategorys = async (req, res) => {
   try {
     const categories = await Category.find(query)
       .sort(sortOptions)
-      .skip(parseInt(offset))
-      .limit(parseInt(limit));
+      .skip(page * perPage)
+      .limit(perPage);
 
     const total = await Category.countDocuments(query);
 
-    return successResponse(
-      res,
+    return res.success(
       {
         data: categories,
-        offset: parseInt(offset),
-        limit: parseInt(limit),
+        offset: page,
+        limit: perPage,
         totalItems: total,
-        hasMore: parseInt(offset) + parseInt(limit) < total,
+        hasMore: (page + 1) * perPage < total,
       },
       "Lấy danh sách danh mục thành công"
     );
   } catch (error) {
-    return errorResponse(res, "Lỗi server khi lấy danh sách danh mục");
+    console.error(error);
+    return res.error("Lỗi server khi lấy danh sách danh mục");
   }
 };
 
-// Lấy danh mục theo ID
 export const getCategoryById = async (req, res) => {
   const { id } = req.params;
   try {
-    const category = await Category.findOne({ _id: id });
+    const category = await Category.findById(id);
     if (!category) {
-      return errorResponse(res, "Không tìm thấy danh mục", 404);
+      return res.error("Không tìm thấy danh mục", 404);
     }
-    return successResponse(res, { data: category }, "Lấy danh mục thành công");
+
+    const books = await Book.find({ category_id: id }).populate("category_id");
+
+    return res.success(
+      { data: { ...category.toObject(), books } },
+      "Lấy danh mục thành công"
+    );
   } catch (error) {
     console.error(error);
-    return errorResponse(res, "Lỗi server khi lấy danh mục");
+    return res.error("Lỗi server khi lấy danh mục");
   }
 };
 
-// Xoá danh mục
 export const deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    // Cập nhật tất cả sách
-    await Book.updateMany({ category_id: id }, { $set: { category: "" } });
-
-    const deleted = await Category.findOneAndDelete({ _id: id });
-    if (!deleted) {
-      return errorResponse(res, "Không tìm thấy danh mục", 404);
+    const deletedCategory = await Category.findOneAndDelete({ _id: id });
+    if (!deletedCategory) {
+      return res.error("Không tìm thấy danh mục", 404);
     }
 
-    // danh mục không xác định
-    const uncategorized = {
-      _id: null,
-      name: "Không xác định",
-    };
-    return successResponse(
-      res,
+    let uncategorized = await Category.findOne({ name: "Không xác định" });
+    if (!uncategorized) {
+      uncategorized = await new Category({
+        name: "Không xác định",
+        description: "Danh mục mặc định khi danh mục gốc bị xoá",
+      }).save();
+    }
+
+    await Book.updateMany(
+      { category_id: id },
+      { $set: { category_id: uncategorized._id } }
+    );
+
+    return res.success(
       { category: uncategorized },
-      "Xoá danh mục thành công"
+      "Xoá danh mục thành công và đã chuyển sách sang danh mục 'Không xác định'"
     );
   } catch (error) {
-    return errorResponse(res, "Xoá danh mục thất bại");
+    console.error(error);
+    return res.error("Xoá danh mục thất bại");
   }
 };
 
-// Tạo mới danh mục
 export const createCategory = async (req, res) => {
   const { name, description } = req.body;
 
   try {
-    // validate
-    const { error } = ValidateCategory.validate(req.body);
+    const { error } = categoryValidate.validate(req.body);
     if (error) {
-      return errorResponse(
-        res,
+      return res.error(
         error.details.map((err) => err.message),
         400
       );
     }
+
     const checkName = await Category.findOne({ name });
     if (checkName) {
-      return errorResponse(res, "Danh mục đã tồn tại", 400);
+      return res.error("Danh mục đã tồn tại", 400);
     }
 
     const newCategory = await new Category({ name, description }).save();
-    return successResponse(
-      res,
-      { data: newCategory },
-      "Tạo danh mục thành công",
-      201
-    );
+    return res.success({ data: newCategory }, "Tạo danh mục thành công", 201);
   } catch (error) {
     console.error(error);
-    return errorResponse(res, "Tạo danh mục thất bại", 400);
+    return res.error("Tạo danh mục thất bại", 400);
   }
 };
 
-// Cập nhật danh mục
 export const updateCategory = async (req, res) => {
   const { id } = req.params;
   const { name, description } = req.body;
 
   try {
-    // validate
-    const { error } = ValidateCategory.validate(req.body);
+    const { error } = categoryValidate.validate(req.body);
     if (error) {
-      return errorResponse(
-        res,
+      return res.error(
         error.details.map((err) => err.message),
         400
       );
     }
+
     const updatedCategory = await Category.findOneAndUpdate(
       { _id: id },
       {
@@ -149,15 +148,14 @@ export const updateCategory = async (req, res) => {
     );
 
     if (!updatedCategory) {
-      return errorResponse(res, "Không tìm thấy danh mục", 404);
+      return res.error("Không tìm thấy danh mục", 404);
     }
 
-    return successResponse(
-      res,
+    return res.success(
       { data: updatedCategory },
       "Cập nhật danh mục thành công"
     );
   } catch (error) {
-    return errorResponse(res, "Cập nhật danh mục thất bại", 400);
+    return res.error("Cập nhật danh mục thất bại", 400);
   }
 };
