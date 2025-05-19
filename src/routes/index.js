@@ -15,8 +15,10 @@ import {
 } from "../controllers/authorController.js";
 import {
   createBook,
+  deleteBook,
   getBookById,
   getBooks,
+  updateBook,
 } from "../controllers/bookController.js";
 import {
   createCoupon,
@@ -53,8 +55,8 @@ router.delete("/authors/:id", deleteAuthor);
 router.post("/book/add", createBook);
 router.get("/books", getBooks);
 router.get("/books/:id", getBookById);
-router.put("/authors/edit/:id", updateAuthor);
-router.delete("/authors/:id", deleteAuthor);
+router.put("/books/:id", updateBook);
+router.delete("/books/:id", deleteBook);
 
 // Coupons router
 router.get("/coupons", getCoupons);
