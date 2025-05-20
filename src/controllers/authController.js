@@ -36,6 +36,42 @@ async function register(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
+// controllers/user.js
+async function updateUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { fullname, email, phone, role } = req.body;
+
+    // Validate hoặc kiểm tra nếu cần
+
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      { fullname, email, phone, role },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ ...user.toObject(), password: undefined });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+async function deleteUser(req, res) {
+  try {
+    const { id } = req.params;
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 
 async function login(req, res) {
   try {
@@ -71,4 +107,4 @@ async function login(req, res) {
   }
 }
 
-export { register, login };
+export { register,updateUser, login, deleteUser };
