@@ -53,7 +53,7 @@ router.put("/authors/edit/:id", updateAuthor);
 router.delete("/authors/:id", deleteAuthor);
 
 // Books router
-router.post("/book/add", createBook);
+router.post("/books/add", createBook);
 router.get("/books", getBooks);
 router.get("/books/:id", getBookById);
 router.put("/books/edit/:id", updateBook);
