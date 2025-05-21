@@ -45,7 +45,14 @@ import {
   getOrderDetails,
   updateOrderDetail,
 } from "../controllers/orderDetailController.js";
-import { createOrderCoupon, getOrderCouponById, getOrderCoupons, updateOrderCoupon } from "../controllers/orderCouponController.js";
+import {
+  createOrderCoupon,
+  deleteOrderCoupon,
+  getOrderCouponById,
+  getOrderCoupons,
+  updateOrderCoupon,
+  validateAndApplyCoupon,
+} from "../controllers/orderCouponController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -107,5 +114,7 @@ router.get("/order-coupons", getOrderCoupons);
 router.get("/order-coupons/:id", getOrderCouponById);
 router.post("/order-coupons/add", createOrderCoupon);
 router.put("/order-coupons/edit/:id", updateOrderCoupon);
+router.delete("/order-coupons/:id", deleteOrderCoupon);
+router.post("/order-coupons/validate", validateAndApplyCoupon);
 
 export default router;
