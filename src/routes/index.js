@@ -28,7 +28,12 @@ import {
   toggleCouponStatus,
   updateCoupon,
 } from "../controllers/couponController.js";
-import { getOrderById, getOrders } from "../controllers/orderController.js";
+import {
+  createOrder,
+  getOrderById,
+  getOrders,
+  updateOrder,
+} from "../controllers/orderController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -71,5 +76,6 @@ router.patch("/coupons/toggle/:id", toggleCouponStatus);
 // Orders
 router.get("/orders", getOrders);
 router.get("/orders/:id", getOrderById);
-
+router.post("/orders/add", createOrder);
+router.put("/orders/edit/:id", updateOrder);
 export default router;
