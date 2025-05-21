@@ -29,10 +29,14 @@ import {
   updateCoupon,
 } from "../controllers/couponController.js";
 import {
+  cancelOrder,
   createOrder,
+  deleteOrder,
   getOrderById,
   getOrders,
+  getUserOrders,
   updateOrder,
+  updateOrderStatus,
 } from "../controllers/orderController.js";
 const router = express.Router();
 
@@ -78,4 +82,9 @@ router.get("/orders", getOrders);
 router.get("/orders/:id", getOrderById);
 router.post("/orders/add", createOrder);
 router.put("/orders/edit/:id", updateOrder);
+router.delete("/orders/:id", deleteOrder);
+router.patch("/orders/status/:id", updateOrderStatus);
+router.patch("/orders/cancel/:id", cancelOrder);
+router.get("/orders/user/:userId", getUserOrders);
+
 export default router;

@@ -714,6 +714,249 @@
 					}
 				}
 			}
+		},
+		"/orders": {
+			"get": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Lấy danh sách đơn hàng",
+				"parameters": [
+					{
+						"name": "offset",
+						"in": "query",
+						"type": "integer",
+						"default": 0
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"type": "integer",
+						"default": 10
+					},
+					{
+						"name": "status",
+						"in": "query",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Danh sách đơn hàng"
+					},
+					"500": {
+						"description": "Lỗi server"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Tạo đơn hàng mới",
+				"parameters": [
+					{
+						"in": "body",
+						"name": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"user_id",
+								"shipping_address",
+								"payment_method",
+								"total_amount",
+								"details"
+							],
+							"properties": {
+								"user_id": {
+									"type": "string"
+								},
+								"shipping_address": {
+									"type": "string"
+								},
+								"payment_method": {
+									"type": "string"
+								},
+								"total_amount": {
+									"type": "number"
+								},
+								"details": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"book_id": {
+												"type": "string"
+											},
+											"quantity": {
+												"type": "integer"
+											},
+											"price": {
+												"type": "number"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Tạo đơn hàng thành công"
+					},
+					"400": {
+						"description": "Lỗi dữ liệu hoặc kho không đủ"
+					}
+				}
+			}
+		},
+		"/orders/status/{id}": {
+			"patch": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Cập nhật trạng thái đơn hàng",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"in": "body",
+						"name": "status",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"properties": {
+								"status": {
+									"type": "string",
+									"enum": [
+										"pending",
+										"processing",
+										"shipped",
+										"delivered",
+										"cancelled"
+									]
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Cập nhật thành công"
+					},
+					"400": {
+						"description": "Trạng thái không hợp lệ hoặc đơn không thể cập nhật"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn"
+					}
+				}
+			}
+		},
+		"/orders/cancel/{id}": {
+			"patch": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Huỷ đơn hàng",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Huỷ đơn thành công"
+					},
+					"400": {
+						"description": "Không thể huỷ đơn"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn"
+					}
+				}
+			}
+		},
+		"/orders/user/{userId}": {
+			"get": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Lấy lịch sử đơn hàng theo người dùng",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "offset",
+						"in": "query",
+						"type": "integer"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"type": "integer"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Danh sách đơn hàng theo user"
+					}
+				}
+			}
+		},
+		"/order-coupons/validate": {
+			"post": {
+				"tags": [
+					"OrderCoupon"
+				],
+				"summary": "Áp dụng mã giảm giá cho đơn hàng",
+				"parameters": [
+					{
+						"in": "body",
+						"name": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"order_id",
+								"coupon_code"
+							],
+							"properties": {
+								"order_id": {
+									"type": "string"
+								},
+								"coupon_code": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Mã giảm giá được áp dụng thành công"
+					},
+					"400": {
+						"description": "Mã không hợp lệ hoặc đã được dùng"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn hàng hoặc mã"
+					}
+				}
+			}
 		}
 	}
 }
