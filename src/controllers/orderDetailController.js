@@ -1,4 +1,5 @@
 import OrderDetail from "../model/OrderDetail.js";
+import { orderDetailValidate } from "../validate/orderDetailValidate.js";
 
 export const getOrderDetails = async (req, res) => {
   let {
@@ -78,5 +79,60 @@ export const deleteOrderDetail = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.error("Xoá chi tiết đơn hàng thất bại", 500);
+  }
+};
+
+export const createOrderDetail = async (req, res) => {
+  try {
+    // Validate
+    const { error } = orderDetailValidate.validate(req.body);
+    if (error) {
+      return res.error(
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+
+    const newDetail = await new OrderDetail(req.body).save();
+    return res.success(
+      { data: newDetail },
+      "Tạo chi tiết đơn hàng thành công",
+      201
+    );
+  } catch (error) {
+    console.error(error);
+    return res.error("Tạo chi tiết đơn hàng thất bại", 400);
+  }
+};
+
+export const updateOrderDetail = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Validate
+    const { error } = orderDetailValidate.validate(req.body);
+    if (error) {
+      return res.error(
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+
+    const updatedDetail = await OrderDetail.findOneAndUpdate(
+      { _id: id },
+      { $set: { ...req.body, updated_at: new Date() } },
+      { new: true }
+    );
+
+    if (!updatedDetail) {
+      return res.error("Không tìm thấy chi tiết đơn hàng", 404);
+    }
+
+    return res.success(
+      { data: updatedDetail },
+      "Cập nhật chi tiết đơn hàng thành công"
+    );
+  } catch (error) {
+    console.error(error);
+    return res.error("Cập nhật chi tiết đơn hàng thất bại", 400);
   }
 };
