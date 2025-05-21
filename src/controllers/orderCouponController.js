@@ -1,4 +1,5 @@
 import OrderCoupon from "../model/OrderCoupon.js";
+import { orderCouponValidate } from "../validate/orderCouponValidate.js";
 
 export const getOrderCoupons = async (req, res) => {
   let {
@@ -61,5 +62,53 @@ export const getOrderCouponById = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.error("Lỗi server khi lấy OrderCoupon");
+  }
+};
+
+export const createOrderCoupon = async (req, res) => {
+  try {
+    // Validate
+    const { error } = orderCouponValidate.validate(req.body);
+    if (error) {
+      return res.error(
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+
+    const newOC = await new OrderCoupon(req.body).save();
+    return res.success({ data: newOC }, "Tạo OrderCoupon thành công", 201);
+  } catch (error) {
+    console.error(error);
+    return res.error("Tạo OrderCoupon thất bại", 400);
+  }
+};
+
+export const updateOrderCoupon = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Validate
+    const { error } = orderCouponValidate.validate(req.body);
+    if (error) {
+      return res.error(
+        error.details.map((err) => err.message),
+        400
+      );
+    }
+
+    const updatedOC = await OrderCoupon.findOneAndUpdate(
+      { _id: id },
+      { $set: { ...req.body, updated_at: new Date() } },
+      { new: true }
+    );
+
+    if (!updatedOC) {
+      return res.error("Không tìm thấy OrderCoupon", 404);
+    }
+
+    return res.success({ data: updatedOC }, "Cập nhật OrderCoupon thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Cập nhật OrderCoupon thất bại", 400);
   }
 };
