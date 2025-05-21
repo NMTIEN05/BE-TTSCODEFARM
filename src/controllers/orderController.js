@@ -1,5 +1,6 @@
 import Book from "../model/Book.js";
 import Order from "../model/Order.js";
+import OrderCoupon from "../model/OrderCoupon.js";
 import OrderDetail from "../model/OrderDetail.js";
 import { orderValidate } from "../validate/orderValidate.js";
 
@@ -155,5 +156,109 @@ export const updateOrder = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.error("Cập nhật đơn hàng thất bại", 400);
+  }
+};
+// Xoá đơn hàng
+export const deleteOrder = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deletedOrder = await Order.findOneAndDelete({ _id: id });
+    if (!deletedOrder) {
+      return res.error("Không tìm thấy đơn hàng", 404);
+    }
+    // xoá các OrderDetail và OrderCoupon liên quan (cascade)
+    await OrderDetail.deleteMany({ order_id: id });
+    await OrderCoupon.deleteMany({ order_id: id });
+
+    return res.success({ data: deletedOrder }, "Xoá đơn hàng thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Xoá đơn hàng thất bại", 500);
+  }
+};
+// Cập nhật trạng thái đơn hàng
+export const updateOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const validStatuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ];
+
+  if (!validStatuses.includes(status))
+    return res.error("Trạng thái không hợp lệ", 400);
+
+  try {
+    const order = await Order.findById(id);
+    if (!order) return res.error("Không tìm thấy đơn hàng", 404);
+    if (["cancelled", "delivered"].includes(order.status)) {
+      return res.error(
+        "Không thể cập nhật đơn hàng đã hoàn tất hoặc bị huỷ",
+        400
+      );
+    }
+
+    const oldStatus = order.status;
+    order.status = status;
+    await order.save();
+
+    await OrderLog.create({
+      order_id: id,
+      old_status: oldStatus,
+      new_status: status,
+    });
+    return res.success(
+      { data: order },
+      "Cập nhật trạng thái đơn hàng thành công"
+    );
+  } catch (err) {
+    console.error(err);
+    return res.error("Lỗi server khi cập nhật trạng thái");
+  }
+};
+// Huỷ đơn hàng và hoàn kho
+export const cancelOrder = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findById(id);
+    if (!order || order.status !== "pending")
+      return res.error("Chỉ huỷ được đơn ở trạng thái pending", 400);
+
+    order.status = "cancelled";
+    await order.save();
+
+    const details = await OrderDetail.find({ order_id: id });
+    for (const d of details) {
+      const book = await Book.findById(d.book_id);
+      if (book) {
+        book.stock += d.quantity;
+        await book.save();
+      }
+    }
+
+    return res.success({ data: order }, "Đơn hàng đã huỷ và hoàn kho");
+  } catch (err) {
+    return res.error("Lỗi khi huỷ đơn", 500);
+  }
+};
+// Lấy đơn hàng theo user
+export const getUserOrders = async (req, res) => {
+  const { userId } = req.params;
+  const { limit = 10, offset = 0 } = req.query;
+  try {
+    const orders = await Order.find({ user_id: userId })
+      .sort({ order_date: -1 })
+      .skip(Number(offset))
+      .limit(Number(limit));
+
+    return res.success(
+      { data: orders },
+      "Lấy danh sách đơn hàng người dùng thành công"
+    );
+  } catch (err) {
+    return res.error("Lỗi khi lấy đơn hàng người dùng", 500);
   }
 };
