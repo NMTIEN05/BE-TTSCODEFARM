@@ -38,6 +38,7 @@ import {
   updateOrder,
   updateOrderStatus,
 } from "../controllers/orderController.js";
+import { deleteOrderDetail, getOrderDetailById, getOrderDetails } from "../controllers/orderDetailController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -86,5 +87,10 @@ router.delete("/orders/:id", deleteOrder);
 router.patch("/orders/status/:id", updateOrderStatus);
 router.patch("/orders/cancel/:id", cancelOrder);
 router.get("/orders/user/:userId", getUserOrders);
+
+// Order Details
+router.get("/order-details", getOrderDetails);
+router.get("/order-details/:id", getOrderDetailById);
+router.delete("/order-details/:id", deleteOrderDetail);
 
 export default router;
