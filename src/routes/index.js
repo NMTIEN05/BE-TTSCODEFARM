@@ -55,6 +55,7 @@ import {
 } from "../controllers/orderCouponController.js";
 
 import { createReview, getReviewsByBook } from "../controllers/bookReviewController.js";
+import { getCart } from "../controllers/cartController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -122,4 +123,7 @@ router.post("/order-coupons/validate", validateAndApplyCoupon);
 // Book review
 router.post("/book-reviews/add", createReview);
 router.get("/book-review/:book_id", getReviewsByBook);
+
+// Cart
+router.get("/cart/:user_id",getCart);
 export default router;
