@@ -41,3 +41,45 @@ export const createReview = async (req, res) => {
     return res.error("Lỗi khi đánh giá ", 500);
   }
 };
+
+// Lấy danh sách đánh giá theo sách
+export const getReviewsByBook = async (req, res) => { 
+  const { book_id } = req.params;
+  let { offset = "0", limit = "10", sortBy = "review_date", order = "desc" } = req.query;
+
+  const page = Math.max(parseInt(offset), 0);
+  const perPage = Math.max(parseInt(limit), 1);
+  const sortOrder = order === "asc" ? 1 : -1;
+  const sortOptions = { [sortBy]: sortOrder };
+
+  try {
+    // Kiểm tra sách tồn tại
+    const book = await Book.findById(book_id);
+    if (!book) {
+      return res.error("Sách không tồn tại", 404);
+    }
+
+    // Lấy danh sách đánh giá
+    const reviews = await BookReview.find({ book_id })
+      .populate("user_id", "full_name") // Lấy thông tin người dùng
+      .sort(sortOptions)
+      .skip(page * perPage)
+      .limit(perPage);
+
+    const total = await BookReview.countDocuments({ book_id });
+
+    return res.success(
+      {
+        data: reviews,
+        offset: page,
+        limit: perPage,
+        totalItems: total,
+        hasMore: (page + 1) * perPage < total,
+      },
+      "Lấy danh sách đánh giá thành công"
+    );
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi lấy danh sách đánh giá", 500);
+  }
+};
