@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 import authRouter from "./src/routes/authRouter.js";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import responseHandler from "./src/middlewares/responseHandler.js";
+import cookieParser from "cookie-parser";
+
+
 
 // Load biến môi trường
 dotenv.config();
@@ -13,6 +16,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 
 // Kết nối MongoDB
 connectDB();

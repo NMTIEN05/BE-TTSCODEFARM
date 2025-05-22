@@ -1,4 +1,5 @@
 import express from "express";
+import jwtMiddleware from "../middlewares/jwt.middleware.js";
 import {
   createCategory,
   deleteCategory,
@@ -53,6 +54,7 @@ import {
   updateOrderCoupon,
   validateAndApplyCoupon,
 } from "../controllers/orderCouponController.js";
+import { createReview } from "../controllers/bookReviewController.js";
 const router = express.Router();
 
 // Route kiểm tra kết nối từ frontend
@@ -116,5 +118,8 @@ router.post("/order-coupons/add", createOrderCoupon);
 router.put("/order-coupons/edit/:id", updateOrderCoupon);
 router.delete("/order-coupons/:id", deleteOrderCoupon);
 router.post("/order-coupons/validate", validateAndApplyCoupon);
+
+// Book Review
+router.post("/Book/review", createReview);
 
 export default router;

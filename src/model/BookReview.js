@@ -10,4 +10,4 @@ const bookReviewSchema = new mongoose.Schema({
 
 const BookReview = mongoose.model("BookReview", bookReviewSchema);
 
- export default BookReview;
+export default BookReview;
