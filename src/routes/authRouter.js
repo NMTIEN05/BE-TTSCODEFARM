@@ -1,15 +1,17 @@
+// routes/authRouter.js
 import express from "express";
-import { deleteUser, login, register, updateUser } from "../controllers/authController.js";
+import { register, login, getAllUsers, getUserById, updateUser, deleteUser } from "../controllers/authController.js";
+import { protect, isAdmin, isSelfOrAdmin } from "../middlewares/auth.js";
 
-const authRouter = express.Router();
+const router = express.Router();
 
-// Route đăng ký
-authRouter.post("/register", register);
-authRouter.put("/auth/:id", updateUser);
-authRouter.delete("/auth/:id", deleteUser);
+router.post("/register", register);
+router.post("/login", login);
 
+// Các route cần đăng nhập
+router.get("/users", protect, isAdmin, getAllUsers);             // Chỉ admin xem tất cả user
+router.get("/users/:id", protect, isSelfOrAdmin, getUserById);   // User xem info mình hoặc admin
+router.put("/users/:id", protect, isSelfOrAdmin, updateUser);    // Chỉnh sửa user (chính mình hoặc admin)
+router.delete("/users/:id", protect, isAdmin, deleteUser);       // Xóa user chỉ admin làm được
 
-// Route đăng nhập
-authRouter.post("/login", login);
-
-export default authRouter;
+export default router;

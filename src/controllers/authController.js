@@ -36,17 +36,19 @@ async function register(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
-// controllers/user.js
+
+// updateUser, deleteUser, getAllUsers, getUserById giữ nguyên như bạn viết
+
 async function updateUser(req, res) {
   try {
     const { id } = req.params;
     const { fullname, email, phone, role } = req.body;
 
-    // Validate hoặc kiểm tra nếu cần
+    // Nếu bạn muốn update isAdmin thì nên check quyền ở middleware, không nên update role trực tiếp
 
     const user = await UserModel.findByIdAndUpdate(
       id,
-      { fullname, email, phone, role },
+      { fullname, email, phone, isAdmin: role === "admin" ? true : false }, // Giả sử role là string "admin" hoặc "user"
       { new: true }
     );
 
@@ -57,6 +59,7 @@ async function updateUser(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
+
 async function deleteUser(req, res) {
   try {
     const { id } = req.params;
@@ -72,6 +75,29 @@ async function deleteUser(req, res) {
   }
 }
 
+async function getAllUsers(req, res) {
+  try {
+    const users = await UserModel.find().select("-password"); // không trả password
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function getUserById(req, res) {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findById(id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
 
 async function login(req, res) {
   try {
@@ -85,26 +111,27 @@ async function login(req, res) {
       return res.status(400).json({ message: "Password min 6 character" });
     }
 
-    // Tìm user theo email (chỉnh thành UserModel)
     const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Tạo token JWT
-    const token = jwt.sign({ id: user._id }, "tiendz", { expiresIn: "1w" });
+    // Tạo token JWT có thêm isAdmin để phân quyền
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      "tiendz", // tốt hơn bạn nên lấy từ process.env.JWT_SECRET
+      { expiresIn: "7d" }
+    );
 
-    // Remove password trong response
     res.json({ ...user.toObject(), password: undefined, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
 
-export { register,updateUser, login, deleteUser };
+export { register, updateUser, getUserById, getAllUsers, login, deleteUser };

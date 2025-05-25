@@ -1,4 +1,4 @@
-// models/user.model.ts
+
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: false, // hoặc xóa dòng required nếu không bắt buộc
+      required: false, 
     },
 
     email: {
@@ -34,6 +34,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const UserModel = mongoose.model("User", userSchema);
+const User  = mongoose.model("User", userSchema);
 
-export default UserModel;
+export default User ;
