@@ -2,7 +2,7 @@ import express from "express";
 import {
   createReview,
   getReviewsByBook,
-} from "../controllers/bookReviewController.js";
+} from "./bookReviewController.js";
 
 const bookReviewRouter = express.Router();
 

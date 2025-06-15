@@ -5,7 +5,7 @@ import {
   getOrderDetailById,
   getOrderDetails,
   updateOrderDetail,
-} from "../controllers/orderDetailController.js";
+} from "./orderDetailController.js";
 
 const orderDetailRouter = express.Router();
 

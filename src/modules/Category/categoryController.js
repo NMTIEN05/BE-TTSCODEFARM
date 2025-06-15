@@ -1,6 +1,6 @@
 import Book from "../model/Book.js";
 import Category from "../model/Category.js";
-import { categoryValidate } from "../validate/categoryValidate.js";
+import { categoryValidate } from "../../validate/categoryValidate.js";
 
 export const getCategorys = async (req, res) => {
   let {

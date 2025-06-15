@@ -3,9 +3,9 @@ import cors from "cors";
 import connectDB from "./src/configs/db.js"; // Đảm bảo import đúng connectDB
 import router from "./src/routes/index.js";
 import dotenv from "dotenv";
-import authRouter from "./src/routes/authRouter.js";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import responseHandler from "./src/middlewares/responseHandler.js";
+import authRouter from "./src/modules/User/authRouter.js";
 // import cookieParser from "cookie-parser";
 
 // Load biến môi trường

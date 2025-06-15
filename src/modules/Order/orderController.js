@@ -2,7 +2,7 @@ import Book from "../model/Book.js";
 import Order from "../model/Order.js";
 import OrderCoupon from "../model/OrderCoupon.js";
 import OrderDetail from "../model/OrderDetail.js";
-import { orderValidate } from "../validate/orderValidate.js";
+import { orderValidate } from "../../validate/orderValidate.js";
 
 export const getOrders = async (req, res) => {
   let {

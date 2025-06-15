@@ -2,7 +2,7 @@ import Cart from "../model/Cart.js";
 import CartItem from "../model/CartItem.js";
 import Book from "../model/Book.js";
 import UserModel from "../model/User.js";
-import { cartItemValidate } from "../validate/cartItemValidate.js";
+import { cartItemValidate } from "./cartItemValidate.js";
 
 // Thêm sách vào giỏ hàng
 export const addToCart = async (req, res) => {
