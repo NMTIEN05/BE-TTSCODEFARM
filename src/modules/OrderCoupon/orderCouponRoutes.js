@@ -6,7 +6,7 @@ import {
   getOrderCoupons,
   updateOrderCoupon,
   validateAndApplyCoupon,
-} from "../controllers/orderCouponController.js";
+} from "./orderCouponController.js";
 
 const orderCouponRouter = express.Router();
 

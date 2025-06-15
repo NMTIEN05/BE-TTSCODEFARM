@@ -1,5 +1,5 @@
 import OrderDetail from "../model/OrderDetail.js";
-import { orderDetailValidate } from "../validate/orderDetailValidate.js";
+import { orderDetailValidate } from "../../validate/orderDetailValidate.js";
 
 export const getOrderDetails = async (req, res) => {
   let {

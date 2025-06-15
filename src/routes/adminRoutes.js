@@ -1,8 +1,7 @@
 import express from "express";
-// Đúng:
-import User from "../model/User.js";
 
 import { protect, isAdmin } from "../middlewares/auth.js";
+import User from "../modules/User/User.js";
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 import Authors from "../model/Author.js";
 import Book from "../model/Book.js";
-import { authorValidate } from "../validate/authorValidate.js";
+import { authorValidate } from "./authorValidate.js";
 
 export const getAuthors = async (req, res) => {
   let {

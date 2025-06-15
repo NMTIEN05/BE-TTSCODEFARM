@@ -6,7 +6,7 @@ import {
   getCoupons,
   toggleCouponStatus,
   updateCoupon,
-} from "../controllers/couponController.js";
+} from "./couponController.js";
 
 const couponRouter = express.Router();
 

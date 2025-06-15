@@ -1,7 +1,7 @@
-// routes/authRouter.js
+// src/modules/User/authRouter.js
 import express from "express";
-import { register, login, getAllUsers, getUserById, updateUser, deleteUser } from "../controllers/authController.js";
-import { protect, isAdmin, isSelfOrAdmin } from "../middlewares/auth.js";
+import { register, login, getAllUsers, getUserById, updateUser, deleteUser } from "./authController.js";
+import { protect, isAdmin, isSelfOrAdmin } from "../../middlewares/auth.js";
 
 const router = express.Router();
 

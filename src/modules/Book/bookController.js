@@ -2,7 +2,7 @@
 import Book from "../model/Book.js";
 import Author from "../model/Author.js";
 import Category from "../model/Category.js";
-import { BookValidate } from "../validate/bookValidate.js";
+import { BookValidate } from "./bookValidate.js";
 
 
 export const createBook = async (req, res) => {
