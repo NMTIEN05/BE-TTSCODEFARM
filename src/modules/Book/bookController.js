@@ -1,7 +1,7 @@
 
-import Book from "../model/Book.js";
-import Author from "../model/Author.js";
-import Category from "../model/Category.js";
+import Book from "./Book.js";
+import Author from "../Author/Author.js";
+import Category from "../Category/Category.js";
 import { BookValidate } from "./bookValidate.js";
 
 

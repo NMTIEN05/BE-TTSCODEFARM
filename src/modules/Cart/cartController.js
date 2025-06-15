@@ -1,6 +1,6 @@
-import Cart from "../model/Cart.js";
-import CartItem from "../model/CartItem.js";
-import UserModel from "../model/User.js";
+import Cart from "./Cart.js";
+import CartItem from "../CartItem/CartItem.js";
+import UserModel from "../User/User.js";
 
 // Lấy giỏ hàng của người dùng
 export const getCart = async (req, res) => {

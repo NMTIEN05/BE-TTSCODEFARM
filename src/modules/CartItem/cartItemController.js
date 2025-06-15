@@ -1,7 +1,7 @@
-import Cart from "../model/Cart.js";
-import CartItem from "../model/CartItem.js";
-import Book from "../model/Book.js";
-import UserModel from "../model/User.js";
+import Cart from "../Cart/Cart.js";
+import CartItem from "./CartItem.js";
+import Book from "../Book/Book.js";
+import UserModel from "../User/User.js";
 import { cartItemValidate } from "./cartItemValidate.js";
 
 // Thêm sách vào giỏ hàng

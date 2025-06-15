@@ -1,13 +1,13 @@
 import express from "express";
-import categoryRouter from "../modules/Category/categoryRoutes";
-import authorRouter from "../modules/Author/authorRoutes";
-import bookRouter from "../modules/Book/bookRoutes";
-import couponRouter from "../modules/Coupon/couponRoutes";
-import orderRouter from "../modules/Order/orderRoutes";
-import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes";
-import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes";
-import bookReviewRouter from "../modules/BookReview/bookReviewRoutes";
-import cartRouter from "../modules/Cart/cartRoutes";
+import categoryRouter from "../modules/Category/categoryRoutes.js";
+import authorRouter from "../modules/Author/authorRoutes.js";
+import bookRouter from "../modules/Book/bookRoutes.js";
+import couponRouter from "../modules/Coupon/couponRoutes.js";
+import orderRouter from "../modules/Order/orderRoutes.js";
+import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
+import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
+import bookReviewRouter from "../modules/BookReview/bookReviewRoutes.js";
+import cartRouter from "../modules/Cart/cartRoutes.js";
 
 const router = express.Router();
 

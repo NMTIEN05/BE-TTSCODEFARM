@@ -1,7 +1,7 @@
-import BookReview from "../model/BookReview.js";
-import Book from "../model/Book.js";
-import UserModel from "../model/User.js";
-import { reviewValidate } from "../../validate/reviewValidate.js";
+import BookReview from "./BookReview.js";
+import Book from "../Book/Book.js";
+import UserModel from "../User/User.js";
+import { reviewValidate } from "./reviewValidate.js";
 
 export const createReview = async (req, res) => {
   const { user_id, book_id, rating, comment } = req.body;
