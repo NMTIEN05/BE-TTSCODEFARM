@@ -1,4 +1,4 @@
-import Book from "../Book/Book.js";
+import Book from "../Product/Book.js";
 import Order from "./Order.js";
 import OrderCoupon from "../OrderCoupon/OrderCoupon.js";
 import OrderDetail from "../OrderDetail/OrderDetail.js";

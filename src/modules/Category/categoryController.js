@@ -1,4 +1,4 @@
-import Book from "../Book/Book.js";
+import Book from "../Product/Book.js";
 import Category from "./Category.js";
 import { categoryValidate } from "./categoryValidate.js";
 

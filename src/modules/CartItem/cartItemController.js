@@ -1,6 +1,6 @@
 import Cart from "../Cart/Cart.js";
 import CartItem from "./CartItem.js";
-import Book from "../Book/Book.js";
+import Book from "../Product/Book.js";
 import UserModel from "../User/User.js";
 import { cartItemValidate } from "./cartItemValidate.js";
 
