@@ -1,15 +1,63 @@
 import express from "express";
-import categoryRouter from "../modules/Category/categoryRoutes.js";
-import authorRouter from "../modules/Author/authorRoutes.js";
-import bookRouter from "../modules/Product/bookRoutes.js";
-import couponRouter from "../modules/Coupon/couponRoutes.js";
-import orderRouter from "../modules/Order/orderRoutes.js";
-import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
-import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
-import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
-import cartRouter from "../modules/Cart/cartRoutes.js";
-import productVariantRouter from "../modules/ProductVariant/productVariantRoutes.js";
-import wishlistRouter from "../modules/WishList/wishlistRouter.js";
+import {
+  createCategory,
+  deleteCategory,
+  getCategorys,
+  getCategoryById,
+  updateCategory,
+} from "../controllers/categoryController.js";
+import {
+  createAuthor,
+  deleteAuthor,
+  getAuthorById,
+  getAuthors,
+  updateAuthor,
+} from "../controllers/authorController.js";
+import {
+  createBook,
+  deleteBook,
+  getBookById,
+  getBooks,
+  updateBook,
+} from "../controllers/bookController.js";
+import {
+  createCoupon,
+  deleteCoupon,
+  getCouponById,
+  getCoupons,
+  toggleCouponStatus,
+  updateCoupon,
+} from "../controllers/couponController.js";
+import {
+  cancelOrder,
+  createOrder,
+  deleteOrder,
+  getOrderById,
+  getOrders,
+  getUserOrders,
+  updateOrder,
+  updateOrderStatus,
+} from "../controllers/orderController.js";
+import {
+  createOrderDetail,
+  deleteOrderDetail,
+  getOrderDetailById,
+  getOrderDetails,
+  updateOrderDetail,
+} from "../controllers/orderDetailController.js";
+import {
+  createOrderCoupon,
+  deleteOrderCoupon,
+  getOrderCouponById,
+  getOrderCoupons,
+  updateOrderCoupon,
+  validateAndApplyCoupon,
+} from "../controllers/orderCouponController.js";
+
+import { createReview, getReviewsByBook } from "../controllers/bookReviewController.js";
+import { getCart } from "../controllers/cartController.js";
+import { addToCart } from "../controllers/cartItemController.js";
+
 
 const router = express.Router();
 
@@ -44,12 +92,7 @@ router.use("", orderCouponRouter);
 router.use("", bookReviewRouter);
 
 // Cart routes
-router.use("", cartRouter);
-
-// Product Variant routes
-router.use("/variants", productVariantRouter);
-
-// Wishlist routes
-router.use("/wishlist", wishlistRouter);
+router.get("/cart/:user_id", getCart);
+router.post("/cart-add", addToCart);
 
 export default router;

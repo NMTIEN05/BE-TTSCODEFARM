@@ -5,7 +5,7 @@ import { categoryValidate } from "./categoryValidate.js";
 export const getCategorys = async (req, res) => {
   let {
     offset = "0",
-    limit = "5",
+    limit = "7",
     name,
     sortBy = "created_at",
     order = "desc",
