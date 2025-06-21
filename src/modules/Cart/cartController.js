@@ -1,6 +1,6 @@
-import Cart from "./Cart.js";
 import CartItem from "../CartItem/CartItem.js";
 import UserModel from "../User/User.js";
+import Cart from "./Cart.js";
 
 // Lấy giỏ hàng của người dùng
 export const getCart = async (req, res) => {
@@ -44,5 +44,38 @@ export const getCart = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.error("Lỗi khi lấy giỏ hàng", 500);
+  }
+};
+// Cập nhật số lượng sản phẩm trong giỏ
+export const updateCartItem = async (req, res) => {
+  const { itemId } = req.params;
+  const { quantity } = req.body;
+
+  try {
+    const item = await CartItem.findById(itemId);
+    if (!item) return res.error("Không tìm thấy sản phẩm trong giỏ", 404);
+
+    item.quantity = quantity;
+    await item.save();
+
+    return res.success(item, "Cập nhật số lượng thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi cập nhật số lượng", 500);
+  }
+};
+
+// Xoá sản phẩm khỏi giỏ
+export const removeCartItem = async (req, res) => {
+  const { itemId } = req.params;
+
+  try {
+    const deleted = await CartItem.findByIdAndDelete(itemId);
+    if (!deleted) return res.error("Không tìm thấy sản phẩm trong giỏ", 404);
+
+    return res.success(deleted, "Xóa sản phẩm khỏi giỏ thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi xoá sản phẩm", 500);
   }
 };
