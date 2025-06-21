@@ -7,8 +7,8 @@ import orderRouter from "../modules/Order/orderRoutes.js";
 import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
 import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
 import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
-import { getCart } from "../modules/Cart/cartController.js";
-import { addToCart } from "../modules/CartItem/cartItemController.js";
+import wishlistRouter from "../modules/WishList/wishlistRouter.js";
+import cartRouter from "../modules/Cart/cartRoutes.js";
 
 
 const router = express.Router();
@@ -43,8 +43,10 @@ router.use("", orderCouponRouter);
 // Book Review routes
 router.use("", bookReviewRouter);
 
+// Wishlist routes
+router.use("/wishlist", wishlistRouter);
+
 // Cart routes
-router.get("/cart/:user_id", getCart);
-router.post("/cart-add", addToCart);
+router.use("", cartRouter);
 
 export default router;
