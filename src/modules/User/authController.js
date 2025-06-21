@@ -1,32 +1,27 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import UserModel from "./User.js";
-import { registerSchema } from "./auth.js";
+import { registerSchema, loginSchema } from "./auth.js";
 
 async function register(req, res) {
   try {
-    const { fullname, email, password } = req.body;
-
-    // Kiểm tra dữ liệu hợp lệ
-    const { error } = registerSchema.validate(req.body, { abortEarly: false });
-    if (error) {
-      const errorsMessage = error.details.map((err) => err.message);
-      return res.status(400).json({ message: errorsMessage });
-    }
+    const { fullname, email, password, phone, isAdmin } = req.body;
 
     const user = await UserModel.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: "Email existed" });
+      return res.status(400).json({ message: "Email đã tồn tại" });
     }
 
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Thêm user (bổ sung fullname)
+    // Thêm user
     const newUser = {
       fullname,
       email,
       password: hashedPassword,
+      phone,
+      isAdmin: isAdmin || false
     };
     const userCreated = await UserModel.create(newUser);
 
@@ -42,13 +37,11 @@ async function register(req, res) {
 async function updateUser(req, res) {
   try {
     const { id } = req.params;
-    const { fullname, email, phone, role } = req.body;
-
-    // Nếu bạn muốn update isAdmin thì nên check quyền ở middleware, không nên update role trực tiếp
+    const { fullname, email, phone, isAdmin } = req.body;
 
     const user = await UserModel.findByIdAndUpdate(
       id,
-      { fullname, email, phone, isAdmin: role === "admin" ? true : false }, // Giả sử role là string "admin" hoặc "user"
+      { fullname, email, phone, isAdmin },
       { new: true }
     );
 
@@ -103,32 +96,41 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    // Kiểm tra dữ liệu hợp lệ
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and Password is Required" });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password min 6 character" });
+    // Kiểm tra dữ liệu hợp lệ với Joi
+    const { error } = loginSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+      const errorsMessage = error.details.map((err) => err.message);
+      return res.status(400).json({ message: errorsMessage[0] });
     }
 
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
 
     // Tạo token JWT có thêm isAdmin để phân quyền
     const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      "tiendz", // tốt hơn bạn nên lấy từ process.env.JWT_SECRET
+      { id: user._id, email: user.email, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET || "tiendz",
       { expiresIn: "7d" }
     );
 
-    res.json({ ...user.toObject(), password: undefined, token });
+    // Trả về thông tin user và token
+    const userResponse = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      phone: user.phone,
+      isAdmin: user.isAdmin,
+      token
+    };
+
+    res.json(userResponse);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
