@@ -18,6 +18,9 @@ const authorSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    avatar: {
+      type: String,
+    },
   },
   { timestamps: true, versionKey: false }
 );

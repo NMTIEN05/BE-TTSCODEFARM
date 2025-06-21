@@ -8,6 +8,7 @@ import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
 import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
 import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
 import cartRouter from "../modules/Cart/cartRoutes.js";
+import productVariantRouter from "../modules/ProductVariant/productVariantRoutes.js";
 
 const router = express.Router();
 
@@ -43,5 +44,8 @@ router.use("", bookReviewRouter);
 
 // Cart routes
 router.use("", cartRouter);
+
+// Product Variant routes
+router.use("/variants", productVariantRouter);
 
 export default router;

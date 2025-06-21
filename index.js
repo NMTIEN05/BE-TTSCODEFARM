@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./src/configs/db.js"; // Đảm bảo import đúng connectDB
 import router from "./src/routes/index.js";
+import uploadRouter from "./src/routes/upload.js";
 import dotenv from "dotenv";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import responseHandler from "./src/middlewares/responseHandler.js";
@@ -15,6 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files
+app.use('/uploads', express.static('uploads'));
+
 // Kết nối MongoDB
 connectDB();
 // Middleware để xử lý phản hồi
@@ -23,6 +27,7 @@ app.use(responseHandler);
 // API routes
 app.use("/api", router);
 app.use("/auth", authRouter);
+app.use("/api/upload", uploadRouter);
 
 setupSwagger(app);
 // Khởi động server

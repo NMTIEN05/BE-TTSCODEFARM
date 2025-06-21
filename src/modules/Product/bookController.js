@@ -17,13 +17,16 @@ export const createBook = async (req, res) => {
     stock_quantity,
     cover_image,
     is_available,
+    format,
   } = req.body;
+  
+  console.log('Create book request body:', req.body);
+  
   try {
     // Xác thực dữ liệu
     const { error } = BookValidate.validate(req.body);
     if (error) {
-      return errorResponse(
-        res,
+      return res.error(
         error.details.map((err) => err.message),
         400
       );
@@ -31,17 +34,17 @@ export const createBook = async (req, res) => {
     // Kiểm tra author_id tồn tại
     const author = await Author.findById(author_id);
     if (!author) {
-      return errorResponse(res, "Tác giả không tồn tại", 400);
+      return res.error("Tác giả không tồn tại", 400);
     }
     // Kiểm tra category_id tồn tại
     const category = await Category.findById(category_id);
     if (!category) {
-      return errorResponse(res, "Danh mục không tồn tại", 400);
+      return res.error("Danh mục không tồn tại", 400);
     }
     // Kiểm tra sách đã tồn tại
     const existingBook = await Book.findOne({ title, author_id });
     if (existingBook) {
-      return errorResponse(res, "Sách đã tồn tại", 400);
+      return res.error("Sách đã tồn tại", 400);
     }
     // Tạo và lưu sách
     const newBook = new Book({
@@ -52,9 +55,10 @@ export const createBook = async (req, res) => {
       publish_year,
       description,
       price,
-      stock_quantity: stock_quantity || 0,
+      stock_quantity: Number(stock_quantity) || 0,
       cover_image,
       is_available: is_available !== undefined ? is_available : true,
+      format: format || 'paperback',
       created_at: new Date(),
       updated_at: new Date(),
     });
@@ -66,7 +70,7 @@ export const createBook = async (req, res) => {
     );
   } catch (error) {
     console.error("Lỗi khi tạo sách:", error); // Ghi log lỗi chi tiết
-    return errorResponse(res, `Lỗi server khi tạo sách: ${error.message}`, 500);
+    return res.error(`Lỗi server khi tạo sách: ${error.message}`, 500);
   }
 };
 // Lấy danh sách sách
@@ -77,7 +81,7 @@ export const getBooks = async (req, res) => {
     title,
     category_id,
     author_id,
-    sortBy = "created_at",
+    sortBy = "createdAt",
     order = "desc",
   } = req.query;
 
@@ -142,12 +146,15 @@ export const getBookById = async (req, res) => {
 // Cập nhật sách
 export const updateBook = async (req, res) => {
   const { id } = req.params;
-  const { category_id, title, author_id, publisher, publish_year, description, price, stock_quantity, cover_image, is_available } = req.body;
+  const { category_id, title, author_id, publisher, publish_year, description, price, stock_quantity, cover_image, is_available, format } = req.body;
 
   try {
+    console.log('Update book request:', { id, body: req.body });
+    
     // Xác thực dữ liệu
     const { error } = BookValidate.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details);
       return res.error(
         error.details.map((err) => err.message),
         400
@@ -180,6 +187,7 @@ export const updateBook = async (req, res) => {
           stock_quantity,
           cover_image,
           is_available,
+          format,
         },
       },
       { new: true }
@@ -194,7 +202,8 @@ export const updateBook = async (req, res) => {
       "Cập nhật sách thành công"
     );
   } catch (error) {
-    return res.error("Lỗi server khi cập nhật sách", 500);
+    console.error('Update book error:', error);
+    return res.error(`Lỗi server khi cập nhật sách: ${error.message}`, 500);
   }
 };
 
@@ -206,7 +215,7 @@ export const deleteBook = async (req, res) => {
     const deletedBook = await Book.findOneAndDelete({ _id: id });
 
     if (!deletedBook) {
-      return errorResponse(res, "Không tìm thấy sách", 404);
+      return res.error("Không tìm thấy sách", 404);
     }
 
     return res.success(

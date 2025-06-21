@@ -20,6 +20,7 @@ export const authorValidate = Joi.object({
     "string.empty": "Quốc tịch không được để trống",
     "any.required": "Quốc tịch là bắt buộc",
   }),
+  avatar: Joi.string().allow("").optional(),
   created_at: Joi.date().optional(),
   updated_at: Joi.date().optional(),
 });

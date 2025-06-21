@@ -7,7 +7,7 @@ export const getAuthors = async (req, res) => {
     offset = "0",
     limit = "5",
     name,
-    sortBy = "created_at",
+    sortBy = "createdAt",
     order = "desc",
   } = req.query;
 
