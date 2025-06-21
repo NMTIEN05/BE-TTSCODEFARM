@@ -7,890 +7,545 @@
 	},
 	"host": "localhost:8888/api",
 	"basePath": "/",
-	"schemes": ["http"],
+	"schemes": [
+		"http"
+	],
 	"paths": {
-		"/brands/": {
+		"/categories": {
 			"get": {
-				"description": "",
+				"tags": [
+					"Category"
+				],
+				"summary": "Lấy danh sách danh mục",
 				"parameters": [
 					{
-						"name": "includeDeleted",
+						"name": "offset",
 						"in": "query",
-						"type": "string"
+						"description": "Vị trí bắt đầu",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 0
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"description": "Số lượng danh mục",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 5
+						}
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"description": "Tìm theo tên danh mục",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"description": "Sắp xếp theo thuộc tính",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"default": "created_at"
+						}
+					},
+					{
+						"name": "order",
+						"in": "query",
+						"description": "Thứ tự sắp xếp",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							],
+							"default": "desc"
+						}
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Lấy danh sách danh mục thành công"
+					},
+					"500": {
+						"description": "Lỗi server"
 					}
 				}
 			},
 			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
+				"tags": [
+					"Category"
+				],
+				"summary": "Tạo danh mục mới",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"name"
+								],
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
+									}
 								}
 							}
 						}
 					}
-				],
+				},
 				"responses": {
 					"201": {
-						"description": "Created"
-					}
-				}
-			}
-		},
-		"/brands/{id}": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
+						"description": "Tạo danh mục thành công"
 					},
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					},
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/brands/soft-delete/{id}": {
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/brands/restore/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/categories/": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created"
+					"400": {
+						"description": "Danh mục đã tồn tại hoặc lỗi dữ liệu"
 					}
 				}
 			}
 		},
 		"/categories/{id}": {
 			"get": {
-				"description": "",
+				"tags": [
+					"Category"
+				],
+				"summary": "Lấy danh mục theo ID",
 				"parameters": [
 					{
 						"name": "id",
 						"in": "path",
 						"required": true,
-						"type": "string"
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Lấy danh mục thành công"
 					},
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
+					"404": {
+						"description": "Không tìm thấy danh mục"
 					}
 				}
 			},
-			"patch": {
-				"description": "",
+			"put": {
+				"tags": [
+					"Category"
+				],
+				"summary": "Cập nhật danh mục",
 				"parameters": [
 					{
 						"name": "id",
 						"in": "path",
 						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/categories/soft-delete/{id}": {
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/categories/restore/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/sub-categories/": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
 						"schema": {
-							"type": "object",
-							"properties": {
-								"categoryId": {
-									"example": "any"
-								},
-								"title": {
-									"example": "any"
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
+									}
 								}
 							}
 						}
 					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created"
-					}
-				}
-			}
-		},
-		"/sub-categories/{id}": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
+				},
 				"responses": {
 					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					},
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
-								},
-								"categoryId": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/sub-categories/soft-delete/{id}": {
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/sub-categories/restore/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/products/": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"title": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created"
-					}
-				}
-			}
-		},
-		"/products/{id}": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					},
-					{
-						"name": "includeDeleted",
-						"in": "query",
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/products/soft-delete/{id}": {
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/products/restore/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/variants/{productId}": {
-			"get": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "productId",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/variants/": {
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"productId": {
-									"example": "any"
-								},
-								"attributes": {
-									"example": "any"
-								},
-								"price": {
-									"example": "any"
-								},
-								"stock": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created"
-					}
-				}
-			}
-		},
-		"/variants/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					},
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"productId": {
-									"example": "any"
-								},
-								"attributes": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/variants/soft-delete/{id}": {
-			"delete": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/variants/restore/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/attributes/": {
-			"get": {
-				"description": "",
-				"responses": {
-					"200": {
-						"description": "OK"
-					},
-					"500": {
-						"description": "Internal Server Error"
-					}
-				}
-			},
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"name": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"201": {
-						"description": "Created"
+						"description": "Cập nhật danh mục thành công"
 					},
 					"400": {
-						"description": "Bad Request"
-					},
-					"500": {
-						"description": "Internal Server Error"
-					}
-				}
-			}
-		},
-		"/attributes/{id}": {
-			"patch": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
+						"description": "Lỗi cập nhật"
 					},
 					"404": {
-						"description": "Not Found"
-					},
-					"500": {
-						"description": "Internal Server Error"
+						"description": "Không tìm thấy danh mục"
 					}
 				}
 			},
 			"delete": {
-				"description": "",
+				"tags": [
+					"Category"
+				],
+				"summary": "Xoá danh mục",
 				"parameters": [
 					{
 						"name": "id",
 						"in": "path",
 						"required": true,
-						"type": "string"
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					},
-					"404": {
-						"description": "Not Found"
-					}
-				}
-			}
-		},
-		"/attribute-values/": {
-			"get": {
-				"description": "",
-				"responses": {
-					"200": {
-						"description": "OK"
-					},
-					"500": {
-						"description": "Internal Server Error"
-					}
-				}
-			},
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
 						"schema": {
-							"type": "object",
-							"properties": {
-								"attributeId": {
-									"example": "any"
-								},
-								"value": {
-									"example": "any"
-								}
-							}
+							"type": "string"
 						}
 					}
 				],
 				"responses": {
+					"200": {
+						"description": "Xoá danh mục thành công"
+					},
+					"404": {
+						"description": "Không tìm thấy danh mục"
+					}
+				}
+			}
+		},
+		"/authors": {
+			"get": {
+				"tags": [
+					"Author"
+				],
+				"summary": "Lấy danh sách tác giả",
+				"parameters": [
+					{
+						"name": "offset",
+						"in": "query",
+						"description": "Vị trí bắt đầu",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 0
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"description": "Số lượng tác giả",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 5
+						}
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"description": "Tìm theo tên tác giả",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"description": "Sắp xếp theo trường",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"default": "created_at"
+						}
+					},
+					{
+						"name": "order",
+						"in": "query",
+						"description": "Thứ tự sắp xếp",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							],
+							"default": "desc"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Lấy danh sách tác giả thành công"
+					},
+					"500": {
+						"description": "Lỗi server"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"Author"
+				],
+				"summary": "Tạo tác giả mới",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"name"
+								],
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"bio": {
+										"type": "string"
+									},
+									"birth_date": {
+										"type": "string",
+										"format": "date"
+									},
+									"nationality": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
 					"201": {
-						"description": "Created"
+						"description": "Tạo tác giả thành công"
 					},
 					"400": {
-						"description": "Bad Request"
+						"description": "Tác giả đã tồn tại"
 					},
 					"500": {
-						"description": "Internal Server Error"
+						"description": "Lỗi server"
 					}
 				}
 			}
 		},
-		"/attribute-values/{id}": {
-			"patch": {
-				"description": "",
+		"/authors/{id}": {
+			"get": {
+				"tags": [
+					"Author"
+				],
+				"summary": "Lấy tác giả theo ID",
 				"parameters": [
 					{
 						"name": "id",
 						"in": "path",
 						"required": true,
-						"type": "string"
-					},
-					{
-						"name": "body",
-						"in": "body",
 						"schema": {
-							"type": "object",
-							"properties": {
-								"value": {
-									"example": "any"
-								}
-							}
+							"type": "string"
 						}
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Lấy tác giả thành công"
 					},
 					"404": {
-						"description": "Not Found"
+						"description": "Không tìm thấy tác giả"
 					},
 					"500": {
-						"description": "Internal Server Error"
+						"description": "Lỗi server"
 					}
 				}
 			},
-			"delete": {
-				"description": "",
+			"put": {
+				"tags": [
+					"Author"
+				],
+				"summary": "Cập nhật tác giả",
 				"parameters": [
 					{
 						"name": "id",
 						"in": "path",
 						"required": true,
-						"type": "string"
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"bio": {
+										"type": "string"
+									},
+									"birth_date": {
+										"type": "string",
+										"format": "date"
+									},
+									"nationality": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Cập nhật tác giả thành công"
+					},
+					"400": {
+						"description": "Lỗi cập nhật"
+					},
+					"404": {
+						"description": "Không tìm thấy tác giả"
+					},
+					"500": {
+						"description": "Lỗi server"
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"Author"
+				],
+				"summary": "Xoá tác giả",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Xoá tác giả thành công"
 					},
 					"404": {
-						"description": "Not Found"
+						"description": "Không tìm thấy tác giả"
 					},
 					"500": {
-						"description": "Internal Server Error"
+						"description": "Lỗi server"
 					}
 				}
 			}
 		},
-		"/auth/register": {
-			"post": {
-				"description": "",
+		"/coupons": {
+			"get": {
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Lấy danh sách coupon",
 				"parameters": [
 					{
-						"name": "body",
+						"name": "offset",
+						"in": "query",
+						"description": "Vị trí bắt đầu",
+						"required": false,
+						"type": "integer",
+						"default": 0
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"description": "Số lượng coupon",
+						"required": false,
+						"type": "integer",
+						"default": 10
+					},
+					{
+						"name": "code",
+						"in": "query",
+						"description": "Tìm theo mã coupon",
+						"required": false,
+						"type": "string"
+					},
+					{
+						"name": "sortBy",
+						"in": "query",
+						"description": "Sắp xếp theo thuộc tính",
+						"required": false,
+						"type": "string",
+						"default": "created_at"
+					},
+					{
+						"name": "order",
+						"in": "query",
+						"description": "Thứ tự sắp xếp",
+						"required": false,
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						],
+						"default": "desc"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Lấy danh sách coupon thành công"
+					},
+					"500": {
+						"description": "Lỗi server"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Tạo coupon mới",
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
 						"in": "body",
+						"name": "body",
+						"description": "Thông tin coupon cần tạo",
+						"required": true,
 						"schema": {
 							"type": "object",
+							"required": [
+								"code",
+								"discount"
+							],
 							"properties": {
-								"email": {
-									"example": "any"
+								"code": {
+									"type": "string"
 								},
-								"password": {
-									"example": "any"
+								"discount": {
+									"type": "number",
+									"format": "float",
+									"description": "Giảm giá (phần trăm hoặc số tiền)"
+								},
+								"type": {
+									"type": "string",
+									"enum": [
+										"percentage",
+										"amount"
+									],
+									"description": "Loại giảm giá"
+								},
+								"description": {
+									"type": "string"
+								},
+								"expiry_date": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"active": {
+									"type": "boolean",
+									"default": true
 								}
 							}
 						}
@@ -898,88 +553,23 @@
 				],
 				"responses": {
 					"201": {
-						"description": "Created"
+						"description": "Tạo coupon thành công"
+					},
+					"400": {
+						"description": "Coupon đã tồn tại hoặc lỗi dữ liệu"
 					}
 				}
 			}
 		},
-		"/auth/login": {
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"email": {
-									"example": "any"
-								},
-								"password": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/auth/logout": {
-			"post": {
-				"description": "",
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/auth/refresh-token": {
-			"post": {
-				"description": "",
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/auth/forgot-password": {
-			"post": {
-				"description": "",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"email": {
-									"example": "any"
-								}
-							}
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/auth/reset-password/{resetToken}": {
+		"/coupons/{id}": {
 			"get": {
-				"description": "",
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Lấy coupon theo ID",
 				"parameters": [
 					{
-						"name": "resetToken",
+						"name": "id",
 						"in": "path",
 						"required": true,
 						"type": "string"
@@ -987,17 +577,383 @@
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Lấy coupon thành công"
+					},
+					"404": {
+						"description": "Không tìm thấy coupon"
+					}
+				}
+			},
+			"put": {
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Cập nhật coupon",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"in": "body",
+						"name": "body",
+						"description": "Thông tin coupon cập nhật",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"properties": {
+								"code": {
+									"type": "string"
+								},
+								"discount": {
+									"type": "number",
+									"format": "float"
+								},
+								"type": {
+									"type": "string",
+									"enum": [
+										"percentage",
+										"amount"
+									]
+								},
+								"description": {
+									"type": "string"
+								},
+								"expiry_date": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"active": {
+									"type": "boolean"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Cập nhật coupon thành công"
+					},
+					"400": {
+						"description": "Lỗi cập nhật"
+					},
+					"404": {
+						"description": "Không tìm thấy coupon"
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Xoá coupon",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Xoá coupon thành công"
+					},
+					"404": {
+						"description": "Không tìm thấy coupon"
 					}
 				}
 			}
 		},
-		"/auth/profile": {
-			"get": {
-				"description": "",
+		"/coupons/{id}/disable": {
+			"patch": {
+				"tags": [
+					"Coupon"
+				],
+				"summary": "Vô hiệu hóa coupon theo ID",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string",
+						"description": "ID của coupon cần vô hiệu hóa"
+					}
+				],
+				"requestBody": {
+					"description": "Dữ liệu để vô hiệu hóa coupon",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"active": {
+										"type": "boolean",
+										"example": false
+									}
+								},
+								"required": [
+									"active"
+								]
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Vô hiệu hóa coupon thành công"
+					},
+					"400": {
+						"description": "Yêu cầu không hợp lệ"
+					},
+					"404": {
+						"description": "Không tìm thấy coupon"
+					}
+				}
+			}
+		},
+		"/orders": {
+			"get": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Lấy danh sách đơn hàng",
+				"parameters": [
+					{
+						"name": "offset",
+						"in": "query",
+						"type": "integer",
+						"default": 0
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"type": "integer",
+						"default": 10
+					},
+					{
+						"name": "status",
+						"in": "query",
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Danh sách đơn hàng"
+					},
+					"500": {
+						"description": "Lỗi server"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Tạo đơn hàng mới",
+				"parameters": [
+					{
+						"in": "body",
+						"name": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"user_id",
+								"shipping_address",
+								"payment_method",
+								"total_amount",
+								"details"
+							],
+							"properties": {
+								"user_id": {
+									"type": "string"
+								},
+								"shipping_address": {
+									"type": "string"
+								},
+								"payment_method": {
+									"type": "string"
+								},
+								"total_amount": {
+									"type": "number"
+								},
+								"details": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"book_id": {
+												"type": "string"
+											},
+											"quantity": {
+												"type": "integer"
+											},
+											"price": {
+												"type": "number"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Tạo đơn hàng thành công"
+					},
+					"400": {
+						"description": "Lỗi dữ liệu hoặc kho không đủ"
+					}
+				}
+			}
+		},
+		"/orders/status/{id}": {
+			"patch": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Cập nhật trạng thái đơn hàng",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"in": "body",
+						"name": "status",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"properties": {
+								"status": {
+									"type": "string",
+									"enum": [
+										"pending",
+										"processing",
+										"shipped",
+										"delivered",
+										"cancelled"
+									]
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Cập nhật thành công"
+					},
+					"400": {
+						"description": "Trạng thái không hợp lệ hoặc đơn không thể cập nhật"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn"
+					}
+				}
+			}
+		},
+		"/orders/cancel/{id}": {
+			"patch": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Huỷ đơn hàng",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Huỷ đơn thành công"
+					},
+					"400": {
+						"description": "Không thể huỷ đơn"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn"
+					}
+				}
+			}
+		},
+		"/orders/user/{userId}": {
+			"get": {
+				"tags": [
+					"Order"
+				],
+				"summary": "Lấy lịch sử đơn hàng theo người dùng",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "offset",
+						"in": "query",
+						"type": "integer"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"type": "integer"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Danh sách đơn hàng theo user"
+					}
+				}
+			}
+		},
+		"/order-coupons/validate": {
+			"post": {
+				"tags": [
+					"OrderCoupon"
+				],
+				"summary": "Áp dụng mã giảm giá cho đơn hàng",
+				"parameters": [
+					{
+						"in": "body",
+						"name": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"order_id",
+								"coupon_code"
+							],
+							"properties": {
+								"order_id": {
+									"type": "string"
+								},
+								"coupon_code": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Mã giảm giá được áp dụng thành công"
+					},
+					"400": {
+						"description": "Mã không hợp lệ hoặc đã được dùng"
+					},
+					"404": {
+						"description": "Không tìm thấy đơn hàng hoặc mã"
 					}
 				}
 			}
