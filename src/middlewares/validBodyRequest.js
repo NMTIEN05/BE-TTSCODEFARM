@@ -9,3 +9,4 @@ const validBodyRequest = (schema) => (req, res, next) => {
 };
 
 export default validBodyRequest;
+

@@ -8,12 +8,13 @@ export const getCoupons = async (req, res) => {
     code,
     sortBy = "createdAt",
     order = "desc",
+    includeDeleted = "false"
   } = req.query;
 
   const page = Math.max(parseInt(offset), 0);
   const perPage = Math.max(parseInt(limit), 1);
 
-  const query = {};
+  const query = includeDeleted === "true" ? { is_deleted: true } : { $or: [{ is_deleted: false }, { is_deleted: { $exists: false } }] };
   if (code) {
     query.code = { $regex: code, $options: "i" };
   }
@@ -68,15 +69,49 @@ export const getCouponById = async (req, res) => {
 export const deleteCoupon = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedCoupon = await Coupon.findOneAndDelete({ _id: id });
-    if (!deletedCoupon) {
+    const coupon = await Coupon.findById(id);
+    if (!coupon) {
       return res.error("Không tìm thấy mã giảm giá", 404);
     }
 
-    return res.success({ data: deletedCoupon }, "Xoá mã giảm giá thành công");
+    // Xóa mềm
+    const deletedCoupon = await Coupon.findByIdAndUpdate(
+      id,
+      { 
+        is_deleted: true, 
+        deleted_at: new Date() 
+      },
+      { new: true }
+    );
+
+    return res.success({ data: deletedCoupon }, "Xoá mềm mã giảm giá thành công");
   } catch (error) {
     console.error(error);
     return res.error("Xoá mã giảm giá thất bại");
+  }
+};
+
+export const restoreCoupon = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const coupon = await Coupon.findById(id);
+    if (!coupon) {
+      return res.error("Không tìm thấy mã giảm giá", 404);
+    }
+
+    const restoredCoupon = await Coupon.findByIdAndUpdate(
+      id,
+      { 
+        is_deleted: false, 
+        deleted_at: null 
+      },
+      { new: true }
+    );
+
+    return res.success({ data: restoredCoupon }, "Khôi phục mã giảm giá thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Khôi phục mã giảm giá thất bại");
   }
 };
 
