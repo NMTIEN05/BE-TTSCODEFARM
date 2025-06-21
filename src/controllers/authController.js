@@ -103,10 +103,10 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    // Kiểm tra dữ liệu hợp lệ
     if (!email || !password) {
       return res.status(400).json({ message: "Email and Password is Required" });
     }
+
     if (password.length < 6) {
       return res.status(400).json({ message: "Password min 6 character" });
     }
@@ -121,17 +121,27 @@ async function login(req, res) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Tạo token JWT có thêm isAdmin để phân quyền
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
-      "tiendz", // tốt hơn bạn nên lấy từ process.env.JWT_SECRET
+      "tiendz", // nên dùng process.env.JWT_SECRET
       { expiresIn: "7d" }
     );
 
-    res.json({ ...user.toObject(), password: undefined, token });
+    // ✅ Trả về user trong object `user` như frontend mong muốn
+    res.json({
+      token,
+      isAdmin: user.isAdmin,
+      user: {
+        _id: user._id,
+        email: user.email,
+        fullname: user.fullname,
+        isAdmin: user.isAdmin,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
+
 
 export { register, updateUser, getUserById, getAllUsers, login, deleteUser };

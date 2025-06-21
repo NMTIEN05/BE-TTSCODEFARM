@@ -55,7 +55,7 @@ import {
 } from "../controllers/orderCouponController.js";
 
 import { createReview, getReviewsByBook } from "../controllers/bookReviewController.js";
-import { getCart } from "../controllers/cartController.js";
+import { getCart, removeCartItem, updateCartItem } from "../controllers/cartController.js";
 import { addToCart } from "../controllers/cartItemController.js";
 
 
@@ -130,5 +130,7 @@ router.get("/book-review/:book_id", getReviewsByBook);
 // Cart routes
 router.get("/cart/:user_id", getCart);
 router.post("/cart-add", addToCart);
+router.put("/cart-update/:itemId", updateCartItem);
+router.delete("/cart-remove/:itemId", removeCartItem);
 
 export default router;
