@@ -96,11 +96,12 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    // Kiểm tra dữ liệu hợp lệ với Joi
-    const { error } = loginSchema.validate(req.body, { abortEarly: false });
-    if (error) {
-      const errorsMessage = error.details.map((err) => err.message);
-      return res.status(400).json({ message: errorsMessage[0] });
+    // Kiểm tra dữ liệu hợp lệ
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and Password is Required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password min 6 character" });
     }
 
     const user = await UserModel.findOne({ email });
@@ -113,27 +114,17 @@ async function login(req, res) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
 
-    // Tạo token JWT có thêm isAdmin để phân quyền
     const token = jwt.sign(
-      { id: user._id, email: user.email, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET || "tiendz",
+      { id: user._id, isAdmin: user.isAdmin },
+      "tiendz", // tốt hơn bạn nên lấy từ process.env.JWT_SECRET
       { expiresIn: "7d" }
     );
 
-    // Trả về thông tin user và token
-    const userResponse = {
-      _id: user._id,
-      fullname: user.fullname,
-      email: user.email,
-      phone: user.phone,
-      isAdmin: user.isAdmin,
-      token
-    };
-
-    res.json(userResponse);
+    res.json({ ...user.toObject(), password: undefined, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
+
 
 export { register, updateUser, getUserById, getAllUsers, login, deleteUser };

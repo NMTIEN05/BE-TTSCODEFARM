@@ -30,18 +30,50 @@ export const addToWishlist = async (req, res) => {
   }
 };
 
+// Lấy danh sách wishlist của user
+export const getWishlist = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    
+    const wishlistItems = await Wishlist.find({ user_id })
+      .populate('book_id')
+      .sort({ added_date: -1 });
+    
+    return res.status(200).json({ 
+      message: 'Get wishlist successfully', 
+      data: wishlistItems 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Xóa sản phẩm khỏi wishlist
 export const removeFromWishlist = async (req, res) => {
   try {
-    // const user_id = req.user._id;
-    // const { book_id } = req.params;
-    const { book_id, user_id } = req.body; // Lấy từ body request
+    const { book_id, user_id } = req.body;
     const deleted = await Wishlist.findOneAndDelete({ user_id, book_id });
     if (!deleted) {
       return res.status(404).json({ message: "Book not found in wishlist" });
     }
     res.json({ message: "Removed from wishlist" });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Kiểm tra sản phẩm có trong wishlist không
+export const checkWishlist = async (req, res) => {
+  try {
+    const { user_id, book_id } = req.params;
+    const exists = await Wishlist.findOne({ user_id, book_id });
+    return res.status(200).json({ 
+      message: 'Check wishlist successfully', 
+      data: { exists: !!exists } 
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };

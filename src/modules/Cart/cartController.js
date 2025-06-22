@@ -1,6 +1,7 @@
-import Cart from "./Cart.js";
 import CartItem from "../CartItem/CartItem.js";
 import UserModel from "../User/User.js";
+import Cart from "./Cart.js";
+import Book from "../Product/Book.js";
 
 // Lấy giỏ hàng của người dùng
 export const getCart = async (req, res) => {
@@ -44,5 +45,113 @@ export const getCart = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.error("Lỗi khi lấy giỏ hàng", 500);
+  }
+};
+// Cập nhật số lượng sản phẩm trong giỏ
+export const updateCartItem = async (req, res) => {
+  const { itemId } = req.params;
+  const { quantity } = req.body;
+
+  try {
+    const item = await CartItem.findById(itemId);
+    if (!item) return res.error("Không tìm thấy sản phẩm trong giỏ", 404);
+
+    item.quantity = quantity;
+    await item.save();
+
+    return res.success(item, "Cập nhật số lượng thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi cập nhật số lượng", 500);
+  }
+};
+// Xoá sản phẩm khỏi giỏ
+export const removeCartItem = async (req, res) => {
+  const { itemId } = req.params;
+
+  try {
+    const deleted = await CartItem.findByIdAndDelete(itemId);
+    if (!deleted) return res.error("Không tìm thấy sản phẩm trong giỏ", 404);
+
+    return res.success(deleted, "Xóa sản phẩm khỏi giỏ thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi xoá sản phẩm", 500);
+  }
+};
+
+// Xóa toàn bộ giỏ hàng
+export const clearCart = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const cart = await Cart.findOne({ user_id, status: "active" });
+    if (!cart) return res.error("Giỏ hàng không tồn tại", 404);
+
+    await CartItem.deleteMany({ cart_id: cart._id });
+    return res.success(null, "Xóa toàn bộ giỏ hàng thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi xóa giỏ hàng", 500);
+  }
+};
+
+// Tính tổng giá trị giỏ hàng
+export const getCartTotal = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const cart = await Cart.findOne({ user_id, status: "active" });
+    if (!cart) return res.error("Giỏ hàng không tồn tại", 404);
+
+    const cartItems = await CartItem.find({ cart_id: cart._id }).populate("book_id");
+    
+    const total = cartItems.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+
+    const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    return res.success({
+      total_amount: total,
+      item_count: itemCount,
+      items: cartItems
+    }, "Tính tổng giỏ hàng thành công");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi tính tổng giỏ hàng", 500);
+  }
+};
+
+// Kiểm tra tồn kho trước khi thanh toán
+export const validateCartStock = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const cart = await Cart.findOne({ user_id, status: "active" });
+    if (!cart) return res.error("Giỏ hàng không tồn tại", 404);
+
+    const cartItems = await CartItem.find({ cart_id: cart._id }).populate("book_id");
+    const outOfStock = [];
+
+    for (const item of cartItems) {
+      if (item.book_id.stock_quantity < item.quantity) {
+        outOfStock.push({
+          book_id: item.book_id._id,
+          book_title: item.book_id.title,
+          requested: item.quantity,
+          available: item.book_id.stock_quantity
+        });
+      }
+    }
+
+    if (outOfStock.length > 0) {
+      return res.error("Một số sản phẩm không đủ số lượng", 400, { outOfStock });
+    }
+
+    return res.success(null, "Tất cả sản phẩm đều có sẵn");
+  } catch (error) {
+    console.error(error);
+    return res.error("Lỗi khi kiểm tra tồn kho", 500);
   }
 };
