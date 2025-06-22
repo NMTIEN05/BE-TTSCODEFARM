@@ -1,12 +1,10 @@
 import Joi from "joi";
 
 export const orderValidate = Joi.object({
-  user_id: Joi.string().required().messages({
-    "any.required": "user_id là bắt buộc",
+  user_id: Joi.string().optional().allow(null).messages({
     "string.empty": "user_id không được để trống",
   }),
-  cart_id: Joi.string().required().messages({
-    "any.required": "cart_id là bắt buộc",
+  cart_id: Joi.string().optional().allow(null).messages({
     "string.empty": "cart_id không được để trống",
   }),
   total_amount: Joi.number().required().min(0).messages({
@@ -32,7 +30,7 @@ export const orderValidate = Joi.object({
   }),
   status: Joi.string()
     .optional()
-    .valid("pending", "processing", "shipped", "completed", "cancelled")
+    .valid("pending", "confirmed", "shipped", "delivered", "cancelled")
     .messages({
       "any.only": "status không hợp lệ",
     }),

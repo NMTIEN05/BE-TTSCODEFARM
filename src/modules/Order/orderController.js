@@ -2,6 +2,7 @@ import Book from "../Product/Book.js";
 import Order from "./Order.js";
 import OrderCoupon from "../OrderCoupon/OrderCoupon.js";
 import OrderDetail from "../OrderDetail/OrderDetail.js";
+import UserModel from "../User/User.js";
 import { orderValidate } from "./orderValidate.js";
 
 export const getOrders = async (req, res) => {
@@ -30,15 +31,28 @@ export const getOrders = async (req, res) => {
 
   try {
     const orders = await Order.find(query)
+      .populate('user_id', 'fullname email')
       .sort(sortOptions)
       .skip(page * perPage)
       .limit(perPage);
+
+    // Lấy chi tiết sản phẩm cho mỗi đơn hàng
+    const ordersWithDetails = await Promise.all(
+      orders.map(async (order) => {
+        const details = await OrderDetail.find({ order_id: order._id })
+          .populate('book_id', 'title cover_image');
+        return {
+          ...order.toObject(),
+          details
+        };
+      })
+    );
 
     const total = await Order.countDocuments(query);
 
     return res.success(
       {
-        data: orders,
+        data: ordersWithDetails,
         offset: page,
         limit: perPage,
         totalItems: total,
@@ -95,7 +109,7 @@ export const createOrder = async (req, res) => {
   } = req.body;
 
   try {
-    const order = await new Order(req.body).save();
+    // Validate trước khi tạo
     const { error } = orderValidate.validate(req.body);
     if (error) {
       return res.error(
@@ -103,6 +117,8 @@ export const createOrder = async (req, res) => {
         400
       );
     }
+    
+    const order = await new Order(req.body).save();
     for (const item of details) {
       const book = await Book.findById(item.book_id);
       if (!book || book.stock < item.quantity) {
@@ -182,7 +198,7 @@ export const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
   const validStatuses = [
     "pending",
-    "processing",
+    "confirmed",
     "shipped",
     "delivered",
     "cancelled",
@@ -194,6 +210,8 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const order = await Order.findById(id);
     if (!order) return res.error("Không tìm thấy đơn hàng", 404);
+    
+    // Kiểm tra trạng thái không thể thay đổi
     if (["cancelled", "delivered"].includes(order.status)) {
       return res.error(
         "Không thể cập nhật đơn hàng đã hoàn tất hoặc bị huỷ",
@@ -201,15 +219,27 @@ export const updateOrderStatus = async (req, res) => {
       );
     }
 
+    // Kiểm tra luồng trạng thái tuần tự
+    const statusFlow = {
+      pending: ['confirmed'],
+      confirmed: ['shipped'],
+      shipped: ['delivered']
+    };
+
+    if (status !== 'cancelled' && order.status !== status) {
+      const allowedNextStatuses = statusFlow[order.status] || [];
+      if (!allowedNextStatuses.includes(status)) {
+        return res.error(
+          `Không thể chuyển từ trạng thái ${order.status} sang ${status}`,
+          400
+        );
+      }
+    }
+
     const oldStatus = order.status;
     order.status = status;
     await order.save();
 
-    await OrderLog.create({
-      order_id: id,
-      old_status: oldStatus,
-      new_status: status,
-    });
     return res.success(
       { data: order },
       "Cập nhật trạng thái đơn hàng thành công"
@@ -248,17 +278,36 @@ export const cancelOrder = async (req, res) => {
 export const getUserOrders = async (req, res) => {
   const { userId } = req.params;
   const { limit = 10, offset = 0 } = req.query;
+  
+  if (!userId) {
+    return res.error('UserId là bắt buộc', 400);
+  }
+  
   try {
     const orders = await Order.find({ user_id: userId })
+      .populate('user_id', 'fullname email')
       .sort({ order_date: -1 })
       .skip(Number(offset))
       .limit(Number(limit));
 
+    // Lấy chi tiết sản phẩm cho mỗi đơn hàng
+    const ordersWithDetails = await Promise.all(
+      orders.map(async (order) => {
+        const details = await OrderDetail.find({ order_id: order._id })
+          .populate('book_id', 'title cover_image');
+        return {
+          ...order.toObject(),
+          details
+        };
+      })
+    );
+
     return res.success(
-      { data: orders },
+      { data: ordersWithDetails },
       "Lấy danh sách đơn hàng người dùng thành công"
     );
   } catch (err) {
+    console.error('getUserOrders error:', err);
     return res.error("Lỗi khi lấy đơn hàng người dùng", 500);
   }
 };
