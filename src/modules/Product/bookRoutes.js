@@ -5,6 +5,7 @@ import {
   getBookById,
   getBooks,
   updateBook,
+  restoreBook,
 } from "./bookController.js";
 
 const bookRouter = express.Router();
@@ -14,5 +15,6 @@ bookRouter.get("/books", getBooks);
 bookRouter.get("/books/:id", getBookById);
 bookRouter.put("/books/edit/:id", updateBook);
 bookRouter.delete("/books/:id", deleteBook);
+bookRouter.patch("/books/restore/:id", restoreBook);
 
 export default bookRouter;

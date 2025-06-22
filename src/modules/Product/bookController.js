@@ -83,11 +83,12 @@ export const getBooks = async (req, res) => {
     author_id,
     sortBy = "createdAt",
     order = "desc",
+    includeDeleted = false,
   } = req.query;
 
   const query = {};
   if (title) {
-    query.title = { $regex: title, $options: "i" }; // Tìm kiếm không phân biệt hoa thường
+    query.title = { $regex: title, $options: "i" };
   }
   if (category_id) {
     query.category_id = category_id;
@@ -96,20 +97,29 @@ export const getBooks = async (req, res) => {
     query.author_id = author_id;
   }
 
+  // Lọc theo trạng thái xóa
+  if (includeDeleted === 'true') {
+    query.deleted_at = { $ne: null };
+  } else {
+    query.deleted_at = { $eq: null };
+  }
+
   const sortOrder = order === "asc" ? 1 : -1;
   const sortOptions = { [sortBy]: sortOrder };
 
   try {
+    console.log('Books query:', query);
     const books = await Book.find(query)
-      .populate("category_id", "name") // Lấy tên danh mục
-      .populate("author_id", "name") // Lấy tên tác giả
+      .populate("category_id", "name")
+      .populate("author_id", "name")
       .sort(sortOptions)
       .skip(parseInt(offset))
       .limit(parseInt(limit));
 
     const total = await Book.countDocuments(query);
+    console.log('Books found:', books.length, 'Total:', total);
 
-    return  res.success(
+    return res.success(
       {
         data: books,
         offset: parseInt(offset),
@@ -129,17 +139,17 @@ export const getBookById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const book = await Book.findOne({ _id: id })
+    const book = await Book.findOne({ _id: id, deleted_at: null })
       .populate("category_id", "name")
       .populate("author_id", "name");
 
     if (!book) {
-      return res.error( "Không tìm thấy sách", 404);
+      return res.error("Không tìm thấy sách", 404);
     }
 
     return res.success({ data: book }, "Lấy thông tin sách thành công");
   } catch (error) {
-    return res.error( "Lỗi server khi lấy thông tin sách", 500);
+    return res.error("Lỗi server khi lấy thông tin sách", 500);
   }
 };
 
@@ -207,12 +217,16 @@ export const updateBook = async (req, res) => {
   }
 };
 
-// Xóa sách
+// Xóa mềm sách
 export const deleteBook = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedBook = await Book.findOneAndDelete({ _id: id });
+    const deletedBook = await Book.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { deleted_at: new Date() },
+      { new: true }
+    );
 
     if (!deletedBook) {
       return res.error("Không tìm thấy sách", 404);
@@ -224,5 +238,29 @@ export const deleteBook = async (req, res) => {
     );
   } catch (error) {
     return res.error("Lỗi server khi xóa sách", 500);
+  }
+};
+
+// Khôi phục sách
+export const restoreBook = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const restoredBook = await Book.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null },
+      { new: true }
+    ).populate("category_id", "name").populate("author_id", "name");
+
+    if (!restoredBook) {
+      return res.error("Không tìm thấy sách đã xóa", 404);
+    }
+
+    return res.success(
+      { data: restoredBook },
+      "Khôi phục sách thành công"
+    );
+  } catch (error) {
+    return res.error("Lỗi server khi khôi phục sách", 500);
   }
 };
