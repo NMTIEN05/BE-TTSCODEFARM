@@ -9,6 +9,7 @@ import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
 import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
 import wishlistRouter from "../modules/WishList/wishlistRouter.js";
 import cartRouter from "../modules/Cart/cartRoutes.js";
+import flashSaleRouter from "../modules/FlashSale/FlashSaleRoutes.js";
 
 
 const router = express.Router();
@@ -48,5 +49,8 @@ router.use("/wishlist", wishlistRouter);
 
 // Cart routes
 router.use("", cartRouter);
+
+// FlashSale routes
+router.use("", flashSaleRouter);
 
 export default router;
