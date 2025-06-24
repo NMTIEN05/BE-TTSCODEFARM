@@ -8,6 +8,7 @@ import {
   validateCartStock 
 } from "./cartController.js";
 import { addToCart } from "../CartItem/cartItemController.js";
+import { validateStock, lowStockWarning } from "../../middlewares/stockValidation.js";
 
 const cartRouter = express.Router();
 
@@ -15,7 +16,7 @@ const cartRouter = express.Router();
 cartRouter.get("/cart/:user_id", getCart);
 
 // Thêm sản phẩm vào giỏ
-cartRouter.post("/cart-add", addToCart);
+cartRouter.post("/cart-add", validateStock, lowStockWarning, addToCart);
 
 // Cập nhật số lượng sản phẩm
 cartRouter.put("/cart-item/:itemId", updateCartItem);

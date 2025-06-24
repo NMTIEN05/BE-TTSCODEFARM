@@ -6,6 +6,7 @@ import OrderDetail from "../OrderDetail/OrderDetail.js";
 import UserModel from "../User/User.js";
 import { orderValidate } from "./orderValidate.js";
 import { sendOrderStatusEmail } from "../../utils/orderEmailNotification.js";
+import { updateProductAvailability, canOrder } from "../../utils/stockManager.js";
 
 export const getOrders = async (req, res) => {
   let {
@@ -124,6 +125,8 @@ export const createOrder = async (req, res) => {
     coupons,
   } = req.body;
 
+  const session = await Book.startSession();
+  
   try {
     console.log('Received order data:', JSON.stringify(req.body, null, 2));
     
@@ -136,56 +139,144 @@ export const createOrder = async (req, res) => {
         400
       );
     }
+
+    // Bắt đầu transaction
+    await session.startTransaction();
     
-    const order = await new Order(req.body).save();
-    console.log('Creating order with details:', details);
+    // Kiểm tra tồn kho trước khi tạo đơn hàng
+    const stockErrors = [];
+    const stockUpdates = [];
     
     for (const item of details) {
-      console.log('Processing item:', item);
+      console.log('Checking stock for item:', item);
       
-      // Nếu có variant_id và khác null thì trừ stock của variant
       if (item.variant_id && item.variant_id !== null) {
-        const variant = await ProductVariant.findById(item.variant_id);
+        const variant = await ProductVariant.findById(item.variant_id).session(session);
         console.log('Variant found:', variant ? `${variant.format} - Stock: ${variant.stock_quantity}` : 'Not found');
         
-        if (!variant || variant.stock_quantity < item.quantity) {
-          return res.error(`Biến thể sản phẩm không đủ hàng: ${item.variant_id}`, 400);
+        if (!variant) {
+          stockErrors.push(`Biến thể sản phẩm không tồn tại: ${item.variant_id}`);
+          continue;
         }
-
-        const oldStock = variant.stock_quantity;
-        variant.stock_quantity -= item.quantity;
-        await variant.save();
-        console.log(`Variant stock updated: ${oldStock} -> ${variant.stock_quantity} (quantity: ${item.quantity})`);
+        
+        if (!variant.is_available) {
+          stockErrors.push(`Biến thể ${variant.format} hiện không có sẵn`);
+          continue;
+        }
+        
+        if (variant.stock_quantity < item.quantity) {
+          stockErrors.push(`Biến thể ${variant.format} không đủ hàng. Còn lại: ${variant.stock_quantity}, yêu cầu: ${item.quantity}`);
+          continue;
+        }
+        
+        if (variant.stock_quantity === 0) {
+          stockErrors.push(`Biến thể ${variant.format} đã hết hàng`);
+          continue;
+        }
+        
+        stockUpdates.push({
+          type: 'variant',
+          id: variant._id,
+          currentStock: variant.stock_quantity,
+          quantity: item.quantity,
+          name: `${variant.format}`
+        });
       } else {
-        // Chỉ trừ stock của book khi không có variant
-        const book = await Book.findById(item.book_id);
+        const book = await Book.findById(item.book_id).session(session);
         console.log('Book found:', book ? `${book.title} - Stock: ${book.stock_quantity}` : 'Not found');
         
-        if (!book || book.stock_quantity < item.quantity) {
-          return res.error(`Sách không đủ hàng: ${item.book_id}`, 400);
+        if (!book) {
+          stockErrors.push(`Sách không tồn tại: ${item.book_id}`);
+          continue;
         }
-
-        const oldStock = book.stock_quantity;
-        book.stock_quantity -= item.quantity;
-        await book.save();
-        console.log(`Book stock updated: ${oldStock} -> ${book.stock_quantity} (quantity: ${item.quantity})`);
+        
+        if (!book.is_available) {
+          stockErrors.push(`Sách ${book.title} hiện không có sẵn`);
+          continue;
+        }
+        
+        if (book.stock_quantity < item.quantity) {
+          stockErrors.push(`Sách ${book.title} không đủ hàng. Còn lại: ${book.stock_quantity}, yêu cầu: ${item.quantity}`);
+          continue;
+        }
+        
+        if (book.stock_quantity === 0) {
+          stockErrors.push(`Sách ${book.title} đã hết hàng`);
+          continue;
+        }
+        
+        stockUpdates.push({
+          type: 'book',
+          id: book._id,
+          currentStock: book.stock_quantity,
+          quantity: item.quantity,
+          name: book.title
+        });
       }
-
-      await OrderDetail.create({
+    }
+    
+    // Nếu có lỗi tồn kho, rollback và trả về lỗi
+    if (stockErrors.length > 0) {
+      await session.abortTransaction();
+      return res.error("Có sản phẩm không đủ hàng hoặc hết hàng", 400, { errors: stockErrors });
+    }
+    
+    // Tạo đơn hàng
+    const order = await new Order(req.body).save({ session });
+    console.log('Order created:', order._id);
+    
+    // Cập nhật tồn kho và tạo chi tiết đơn hàng
+    for (let i = 0; i < details.length; i++) {
+      const item = details[i];
+      const stockUpdate = stockUpdates[i];
+      
+      // Cập nhật tồn kho
+      if (stockUpdate.type === 'variant') {
+        await ProductVariant.findByIdAndUpdate(
+          stockUpdate.id,
+          { $inc: { stock_quantity: -stockUpdate.quantity } },
+          { session }
+        );
+        console.log(`Variant ${stockUpdate.name} stock updated: ${stockUpdate.currentStock} -> ${stockUpdate.currentStock - stockUpdate.quantity}`);
+        
+        // Cập nhật trạng thái sản phẩm nếu hết hàng
+        await updateProductAvailability(item.book_id, stockUpdate.id);
+      } else {
+        await Book.findByIdAndUpdate(
+          stockUpdate.id,
+          { $inc: { stock_quantity: -stockUpdate.quantity } },
+          { session }
+        );
+        console.log(`Book ${stockUpdate.name} stock updated: ${stockUpdate.currentStock} -> ${stockUpdate.currentStock - stockUpdate.quantity}`);
+        
+        // Cập nhật trạng thái sản phẩm nếu hết hàng
+        await updateProductAvailability(item.book_id);
+      }
+      
+      // Tạo chi tiết đơn hàng
+      await OrderDetail.create([{
         order_id: order._id,
         book_id: item.book_id,
         variant_id: item.variant_id || null,
         quantity: item.quantity,
         price: item.price,
         subtotal: item.quantity * item.price,
-      });
+      }], { session });
     }
+    
+    // Commit transaction
+    await session.commitTransaction();
+    console.log('Transaction committed successfully');
 
     return res.success({ data: order }, "Tạo đơn hàng thành công");
   } catch (err) {
+    // Rollback transaction nếu có lỗi
+    await session.abortTransaction();
     console.error('Create order error:', err);
     console.error('Error stack:', err.stack);
     return res.error(err.message || "Lỗi khi tạo đơn hàng", 500);
+  } finally {
+    await session.endSession();
   }
 };
 // Cập nhật đơn hàng
@@ -315,44 +406,91 @@ export const updateOrderStatus = async (req, res) => {
 // Huỷ đơn hàng và hoàn kho
 export const cancelOrder = async (req, res) => {
   const { id } = req.params;
+  const session = await Order.startSession();
+  
   try {
     const order = await Order.findById(id);
-    if (!order || order.status !== "pending")
-      return res.error("Chỉ huỷ được đơn ở trạng thái pending", 400);
+    if (!order) {
+      return res.error("Đơn hàng không tồn tại", 404);
+    }
+    
+    if (!["pending", "confirmed"].includes(order.status)) {
+      return res.error("Chỉ huỷ được đơn ở trạng thái pending hoặc confirmed", 400);
+    }
 
+    await session.startTransaction();
+    
+    // Cập nhật trạng thái đơn hàng
     order.status = "cancelled";
-    await order.save();
+    await order.save({ session });
+    console.log(`Order ${id} status updated to cancelled`);
 
-    const details = await OrderDetail.find({ order_id: id });
-    for (const d of details) {
-      if (d.variant_id && d.variant_id !== null) {
-        const variant = await ProductVariant.findById(d.variant_id);
+    // Lấy chi tiết đơn hàng và hoàn kho
+    const details = await OrderDetail.find({ order_id: id }).session(session);
+    const restoreLog = [];
+    
+    for (const detail of details) {
+      if (detail.variant_id && detail.variant_id !== null) {
+        const variant = await ProductVariant.findById(detail.variant_id).session(session);
         if (variant) {
-          variant.stock_quantity += d.quantity;
-          await variant.save();
+          const oldStock = variant.stock_quantity;
+          await ProductVariant.findByIdAndUpdate(
+            detail.variant_id,
+            { $inc: { stock_quantity: detail.quantity } },
+            { session }
+          );
+          restoreLog.push(`Variant ${variant.format}: ${oldStock} -> ${oldStock + detail.quantity} (+${detail.quantity})`);
+          console.log(`Restored variant stock: ${variant.format} +${detail.quantity}`);
+          
+          // Cập nhật trạng thái sản phẩm khi hoàn kho
+          await updateProductAvailability(detail.book_id, detail.variant_id);
         }
       } else {
-        const book = await Book.findById(d.book_id);
+        const book = await Book.findById(detail.book_id).session(session);
         if (book) {
-          book.stock_quantity += d.quantity;
-          await book.save();
+          const oldStock = book.stock_quantity;
+          await Book.findByIdAndUpdate(
+            detail.book_id,
+            { $inc: { stock_quantity: detail.quantity } },
+            { session }
+          );
+          restoreLog.push(`Book ${book.title}: ${oldStock} -> ${oldStock + detail.quantity} (+${detail.quantity})`);
+          console.log(`Restored book stock: ${book.title} +${detail.quantity}`);
+          
+          // Cập nhật trạng thái sản phẩm khi hoàn kho
+          await updateProductAvailability(detail.book_id);
         }
       }
     }
+    
+    await session.commitTransaction();
+    console.log('Stock restoration completed:', restoreLog);
 
-    // Gửi email thông báo hủy đơn
+    // Gửi email thông báo hủy đơn (không dùng transaction)
     try {
       const user = await UserModel.findById(order.user_id);
       if (user && user.email) {
         await sendOrderStatusEmail(order, user, "cancelled");
+        console.log('Cancellation email sent to:', user.email);
       }
     } catch (emailError) {
       console.error('Error sending cancellation email:', emailError);
     }
 
-    return res.success({ data: order }, "Đơn hàng đã huỷ và hoàn kho");
+    return res.success(
+      { 
+        data: order, 
+        restored_items: restoreLog.length,
+        message: "Hoàn kho thành công" 
+      }, 
+      "Đơn hàng đã huỷ và hoàn kho"
+    );
   } catch (err) {
+    await session.abortTransaction();
+    console.error('Cancel order error:', err);
     return res.error("Lỗi khi huỷ đơn", 500);
+  } finally {
+    await session.endSession();
   }
 };
 // Lấy đơn hàng theo user
@@ -390,5 +528,60 @@ export const getUserOrders = async (req, res) => {
   } catch (err) {
     console.error('getUserOrders error:', err);
     return res.error("Lỗi khi lấy đơn hàng người dùng", 500);
+  }
+};
+
+// Kiểm tra tồn kho sản phẩm
+export const checkProductStock = async (req, res) => {
+  const { bookId, variantId, quantity } = req.query;
+  
+  if (!bookId) {
+    return res.error('bookId là bắt buộc', 400);
+  }
+  
+  try {
+    const stockCheck = await canOrder(bookId, variantId, parseInt(quantity) || 1);
+    
+    if (stockCheck.canOrder) {
+      return res.success(
+        {
+          can_order: true,
+          available_stock: stockCheck.availableStock,
+          product_name: stockCheck.productName
+        },
+        "Sản phẩm có sẵn"
+      );
+    } else {
+      return res.error(
+        stockCheck.reason,
+        400,
+        {
+          can_order: false,
+          available_stock: stockCheck.availableStock,
+          product_name: stockCheck.productName
+        }
+      );
+    }
+  } catch (err) {
+    console.error('checkProductStock error:', err);
+    return res.error("Lỗi khi kiểm tra tồn kho", 500);
+  }
+};
+
+// Lấy danh sách sản phẩm sắp hết hàng
+export const getLowStockAlert = async (req, res) => {
+  const { threshold = 5 } = req.query;
+  
+  try {
+    const { getLowStockProducts } = await import("../../utils/stockManager.js");
+    const lowStockData = await getLowStockProducts(parseInt(threshold));
+    
+    return res.success(
+      lowStockData,
+      "Lấy danh sách sản phẩm sắp hết hàng thành công"
+    );
+  } catch (err) {
+    console.error('getLowStockAlert error:', err);
+    return res.error("Lỗi khi lấy danh sách sản phẩm sắp hết hàng", 500);
   }
 };
