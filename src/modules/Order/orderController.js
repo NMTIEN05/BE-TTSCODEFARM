@@ -4,6 +4,7 @@ import OrderCoupon from "../OrderCoupon/OrderCoupon.js";
 import OrderDetail from "../OrderDetail/OrderDetail.js";
 import UserModel from "../User/User.js";
 import { orderValidate } from "./orderValidate.js";
+import { sendOrderStatusEmail } from "../../utils/orderEmailNotification.js";
 
 export const getOrders = async (req, res) => {
   let {
@@ -240,6 +241,24 @@ export const updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
+    // Gửi email thông báo cho khách hàng
+    try {
+      console.log('Finding user for order:', order.user_id);
+      const user = await UserModel.findById(order.user_id);
+      console.log('User found:', user ? user.email : 'No user');
+      
+      if (user && user.email) {
+        console.log('Sending email to:', user.email);
+        await sendOrderStatusEmail(order, user, status);
+        console.log('Email sent successfully');
+      } else {
+        console.log('No user or email found for order');
+      }
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Không throw error để không ảnh hưởng đến việc cập nhật đơn hàng
+    }
+
     return res.success(
       { data: order },
       "Cập nhật trạng thái đơn hàng thành công"
@@ -267,6 +286,16 @@ export const cancelOrder = async (req, res) => {
         book.stock += d.quantity;
         await book.save();
       }
+    }
+
+    // Gửi email thông báo hủy đơn
+    try {
+      const user = await UserModel.findById(order.user_id);
+      if (user && user.email) {
+        await sendOrderStatusEmail(order, user, "cancelled");
+      }
+    } catch (emailError) {
+      console.error('Error sending cancellation email:', emailError);
     }
 
     return res.success({ data: order }, "Đơn hàng đã huỷ và hoàn kho");

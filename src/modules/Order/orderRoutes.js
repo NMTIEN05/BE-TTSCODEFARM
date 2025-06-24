@@ -9,6 +9,7 @@ import {
   updateOrder,
   updateOrderStatus,
 } from "./orderController.js";
+import { testEmailSending } from "../../utils/testEmail.js";
 
 const orderRouter = express.Router();
 
@@ -20,5 +21,6 @@ orderRouter.delete("/orders/:id", deleteOrder);
 orderRouter.patch("/orders/status/:id", updateOrderStatus);
 orderRouter.patch("/orders/cancel/:id", cancelOrder);
 orderRouter.get("/orders/user/:userId", getUserOrders);
+orderRouter.get("/test-email", testEmailSending);
 
 export default orderRouter;
