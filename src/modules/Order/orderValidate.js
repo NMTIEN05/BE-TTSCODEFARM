@@ -40,6 +40,7 @@ export const orderValidate = Joi.object({
         book_id: Joi.string().required().messages({
           "any.required": "book_id là bắt buộc",
         }),
+        variant_id: Joi.string().optional().allow(null),
         quantity: Joi.number().integer().min(1).required().messages({
           "any.required": "quantity là bắt buộc",
         }),

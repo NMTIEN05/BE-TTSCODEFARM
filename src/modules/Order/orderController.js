@@ -1,4 +1,5 @@
 import Book from "../Product/Book.js";
+import ProductVariant from "../ProductVariant/ProductVariant.js";
 import Order from "./Order.js";
 import OrderCoupon from "../OrderCoupon/OrderCoupon.js";
 import OrderDetail from "../OrderDetail/OrderDetail.js";
@@ -32,7 +33,11 @@ export const getOrders = async (req, res) => {
 
   try {
     const orders = await Order.find(query)
-      .populate('user_id', 'fullname email')
+      .populate({
+        path: 'user_id',
+        select: 'fullname email',
+        model: 'User'
+      })
       .sort(sortOptions)
       .skip(page * perPage)
       .limit(perPage);
@@ -42,8 +47,18 @@ export const getOrders = async (req, res) => {
       orders.map(async (order) => {
         const details = await OrderDetail.find({ order_id: order._id })
           .populate('book_id', 'title cover_image');
+        
+        const orderObj = order.toObject();
+        // Nếu không có thông tin user, thêm fallback
+        if (!orderObj.user_id || !orderObj.user_id.fullname) {
+          orderObj.user_id = {
+            fullname: 'Khách vãng lai',
+            email: 'N/A'
+          };
+        }
+        
         return {
-          ...order.toObject(),
+          ...orderObj,
           details
         };
       })
@@ -110,9 +125,12 @@ export const createOrder = async (req, res) => {
   } = req.body;
 
   try {
+    console.log('Received order data:', JSON.stringify(req.body, null, 2));
+    
     // Validate trước khi tạo
     const { error } = orderValidate.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details);
       return res.error(
         error.details.map((err) => err.message),
         400
@@ -120,18 +138,43 @@ export const createOrder = async (req, res) => {
     }
     
     const order = await new Order(req.body).save();
+    console.log('Creating order with details:', details);
+    
     for (const item of details) {
-      const book = await Book.findById(item.book_id);
-      if (!book || book.stock < item.quantity) {
-        return res.error(`Sách không đủ hàng: ${item.book_id}`, 400);
-      }
+      console.log('Processing item:', item);
+      
+      // Nếu có variant_id và khác null thì trừ stock của variant
+      if (item.variant_id && item.variant_id !== null) {
+        const variant = await ProductVariant.findById(item.variant_id);
+        console.log('Variant found:', variant ? `${variant.format} - Stock: ${variant.stock_quantity}` : 'Not found');
+        
+        if (!variant || variant.stock_quantity < item.quantity) {
+          return res.error(`Biến thể sản phẩm không đủ hàng: ${item.variant_id}`, 400);
+        }
 
-      book.stock -= item.quantity;
-      await book.save();
+        const oldStock = variant.stock_quantity;
+        variant.stock_quantity -= item.quantity;
+        await variant.save();
+        console.log(`Variant stock updated: ${oldStock} -> ${variant.stock_quantity} (quantity: ${item.quantity})`);
+      } else {
+        // Chỉ trừ stock của book khi không có variant
+        const book = await Book.findById(item.book_id);
+        console.log('Book found:', book ? `${book.title} - Stock: ${book.stock_quantity}` : 'Not found');
+        
+        if (!book || book.stock_quantity < item.quantity) {
+          return res.error(`Sách không đủ hàng: ${item.book_id}`, 400);
+        }
+
+        const oldStock = book.stock_quantity;
+        book.stock_quantity -= item.quantity;
+        await book.save();
+        console.log(`Book stock updated: ${oldStock} -> ${book.stock_quantity} (quantity: ${item.quantity})`);
+      }
 
       await OrderDetail.create({
         order_id: order._id,
         book_id: item.book_id,
+        variant_id: item.variant_id || null,
         quantity: item.quantity,
         price: item.price,
         subtotal: item.quantity * item.price,
@@ -140,8 +183,9 @@ export const createOrder = async (req, res) => {
 
     return res.success({ data: order }, "Tạo đơn hàng thành công");
   } catch (err) {
-    console.error(err);
-    return res.error("Lỗi khi tạo đơn hàng", 500);
+    console.error('Create order error:', err);
+    console.error('Error stack:', err.stack);
+    return res.error(err.message || "Lỗi khi tạo đơn hàng", 500);
   }
 };
 // Cập nhật đơn hàng
@@ -281,10 +325,18 @@ export const cancelOrder = async (req, res) => {
 
     const details = await OrderDetail.find({ order_id: id });
     for (const d of details) {
-      const book = await Book.findById(d.book_id);
-      if (book) {
-        book.stock += d.quantity;
-        await book.save();
+      if (d.variant_id && d.variant_id !== null) {
+        const variant = await ProductVariant.findById(d.variant_id);
+        if (variant) {
+          variant.stock_quantity += d.quantity;
+          await variant.save();
+        }
+      } else {
+        const book = await Book.findById(d.book_id);
+        if (book) {
+          book.stock_quantity += d.quantity;
+          await book.save();
+        }
       }
     }
 
