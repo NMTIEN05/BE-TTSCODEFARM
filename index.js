@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import setupSwagger from "./src/configs/swaggerConfig.js";
 import responseHandler from "./src/middlewares/responseHandler.js";
 import authRouter from "./src/modules/User/authRouter.js";
+import { updateFlashSaleStatus } from "./src/utils/cronJobs.js";
 // import cookieParser from "cookie-parser";
 
 // Load biến môi trường
@@ -30,9 +31,13 @@ app.use("/auth", authRouter);
 app.use("/api/upload", uploadRouter);
 
 setupSwagger(app);
+// Khởi động cron jobs
+updateFlashSaleStatus.start();
+
 // Khởi động server
 const PORT = process.env.PORT || 8888;
 app.listen(PORT, () => {
   console.log(`Server is running on: http://localhost:${PORT}/api`);
   console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
+  console.log('Flash sale cron job started');
 });
