@@ -11,6 +11,7 @@ import wishlistRouter from "../modules/WishList/wishlistRouter.js";
 import cartRouter from "../modules/Cart/cartRoutes.js";
 import variantRouter from "../modules/ProductVariant/productVariantRoutes.js";
 import flashSaleRouter from "../modules/FlashSale/flashSaleRoutes.js";
+import vnpayRouter from "../modules/Payment/vnpayRoutes.js";
 
 
 const router = express.Router();
@@ -56,5 +57,8 @@ router.use("/variants", variantRouter);
 
 // Flash Sale routes
 router.use("/flashsales", flashSaleRouter);
+
+// VNPay routes
+router.use("/payment", vnpayRouter);
 
 export default router;

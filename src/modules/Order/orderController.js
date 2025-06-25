@@ -4,6 +4,7 @@ import Order from "./Order.js";
 import OrderCoupon from "../OrderCoupon/OrderCoupon.js";
 import OrderDetail from "../OrderDetail/OrderDetail.js";
 import UserModel from "../User/User.js";
+import Payment from "../Payment/Payment.js";
 import { orderValidate } from "./orderValidate.js";
 import { sendOrderStatusEmail } from "../../utils/orderEmailNotification.js";
 import { updateProductAvailability, canOrder } from "../../utils/stockManager.js";
@@ -379,7 +380,19 @@ export const updateOrderStatus = async (req, res) => {
     // Gửi email thông báo cho khách hàng
     try {
       console.log('Finding user for order:', order.user_id);
-      const user = await UserModel.findById(order.user_id);
+      let user = null;
+      
+      if (order.user_id) {
+        user = await UserModel.findById(order.user_id);
+      } else {
+        // Nếu không có user_id, thử tìm từ Payment record
+        const payment = await Payment.findOne({ order_id: order._id });
+        if (payment && payment.user_id) {
+          user = await UserModel.findById(payment.user_id);
+          console.log('Found user from payment record:', user?.email);
+        }
+      }
+      
       console.log('User found:', user ? user.email : 'No user');
       
       if (user && user.email) {
