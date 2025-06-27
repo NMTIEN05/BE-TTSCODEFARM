@@ -21,6 +21,10 @@ const authorSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
+    deleted_at: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true, versionKey: false }
 );

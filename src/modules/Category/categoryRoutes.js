@@ -5,6 +5,8 @@ import {
   getCategoryById,
   getCategorys,
   updateCategory,
+  restoreCategory,
+  forceDeleteCategory,
 } from "./categoryController.js";
 const categoryRouter = express.Router();
 
@@ -12,6 +14,8 @@ const categoryRouter = express.Router();
 categoryRouter.get("/categories", getCategorys);
 categoryRouter.get("/categories/:id", getCategoryById);
 categoryRouter.delete("/categories/:id", deleteCategory);
+categoryRouter.patch("/categories/:id/restore", restoreCategory);
+categoryRouter.delete("/categories/:id/force", forceDeleteCategory);
 categoryRouter.post("/categories/add", createCategory);
 categoryRouter.put("/categories/edit/:id", updateCategory);
 

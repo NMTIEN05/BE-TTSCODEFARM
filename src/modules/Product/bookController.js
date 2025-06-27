@@ -274,6 +274,26 @@ export const restoreBook = async (req, res) => {
   }
 };
 
+// Xóa vĩnh viễn sách
+export const forceDeleteBook = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const book = await Book.findOneAndDelete({ _id: id, deleted_at: { $ne: null } });
+
+    if (!book) {
+      return res.error("Không tìm thấy sách đã xóa", 404);
+    }
+
+    return res.success(
+      { data: book },
+      "Xóa vĩnh viễn sách thành công"
+    );
+  } catch (error) {
+    return res.error("Lỗi server khi xóa vĩnh viễn sách", 500);
+  }
+};
+
 // Tìm kiếm sách
 export const searchBooks = async (req, res) => {
   const {
