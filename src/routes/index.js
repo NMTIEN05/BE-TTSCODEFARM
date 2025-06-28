@@ -12,6 +12,7 @@ import cartRouter from "../modules/Cart/cartRoutes.js";
 import variantRouter from "../modules/ProductVariant/productVariantRoutes.js";
 import flashSaleRouter from "../modules/FlashSale/flashSaleRoutes.js";
 import vnpayRouter from "../modules/Payment/vnpayRoutes.js";
+import contactRouter from "../modules/Contact/contact.routes.js";
 
 
 const router = express.Router();
@@ -60,5 +61,8 @@ router.use("/flashsales", flashSaleRouter);
 
 // VNPay routes
 router.use("/payment", vnpayRouter);
+
+// Contact routes
+router.use("/contact", contactRouter);
 
 export default router;
