@@ -4,6 +4,7 @@ import authorRouter from "../modules/Author/authorRoutes.js";
 import bookRouter from "../modules/Product/bookRoutes.js";
 import couponRouter from "../modules/Coupon/couponRoutes.js";
 import orderRouter from "../modules/Order/orderRoutes.js";
+import returnRequestRouter from "../modules/Order/returnRequestRoutes.js";
 import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
 import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
 import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
@@ -37,6 +38,7 @@ router.use("", couponRouter);
 
 // Order routes
 router.use("", orderRouter);
+router.use("", returnRequestRouter);
 
 // Order Detail routes
 router.use("", orderDetailRouter);

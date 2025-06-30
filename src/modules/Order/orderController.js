@@ -335,10 +335,13 @@ export const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
   const validStatuses = [
     "pending",
+    "processing",
     "confirmed",
+    "ready_to_ship",
     "shipped",
     "delivered",
     "cancelled",
+    "returned",
   ];
 
   if (!validStatuses.includes(status))
@@ -349,18 +352,37 @@ export const updateOrderStatus = async (req, res) => {
     if (!order) return res.error("Không tìm thấy đơn hàng", 404);
     
     // Kiểm tra trạng thái không thể thay đổi
-    if (["cancelled", "delivered"].includes(order.status)) {
+    if (["cancelled"].includes(order.status)) {
       return res.error(
-        "Không thể cập nhật đơn hàng đã hoàn tất hoặc bị huỷ",
+        "Đơn hàng đã bị huỷ, không thể thay đổi trạng thái",
+        400
+      );
+    }
+    
+    // Đơn hàng đã giao chỉ có thể chuyển sang trạng thái hoàn trả
+    if (order.status === "delivered" && status !== "returned") {
+      return res.error(
+        "Đơn hàng đã giao chỉ có thể chuyển sang trạng thái hoàn trả",
+        400
+      );
+    }
+    
+    // Đơn hàng đã hoàn trả không thể thay đổi trạng thái
+    if (order.status === "returned") {
+      return res.error(
+        "Đơn hàng đã hoàn trả, không thể thay đổi trạng thái",
         400
       );
     }
 
     // Kiểm tra luồng trạng thái tuần tự
     const statusFlow = {
-      pending: ['confirmed'],
-      confirmed: ['shipped'],
-      shipped: ['delivered']
+      pending: ['processing', 'confirmed', 'cancelled'],
+      processing: ['confirmed', 'cancelled'],
+      confirmed: ['ready_to_ship', 'cancelled'],
+      ready_to_ship: ['shipped', 'cancelled'],
+      shipped: ['delivered', 'returned'],
+      delivered: ['returned']
     };
 
     if (status !== 'cancelled' && order.status !== status) {
@@ -427,8 +449,8 @@ export const cancelOrder = async (req, res) => {
       return res.error("Đơn hàng không tồn tại", 404);
     }
     
-    if (!["pending", "confirmed"].includes(order.status)) {
-      return res.error("Chỉ huỷ được đơn ở trạng thái pending hoặc confirmed", 400);
+    if (!["pending", "processing", "confirmed", "ready_to_ship"].includes(order.status)) {
+      return res.error("Chỉ huỷ được đơn ở trạng thái chờ xử lý, đang xử lý, đã xác nhận hoặc sẵn sàng giao hàng", 400);
     }
 
     await session.startTransaction();
@@ -596,5 +618,95 @@ export const getLowStockAlert = async (req, res) => {
   } catch (err) {
     console.error('getLowStockAlert error:', err);
     return res.error("Lỗi khi lấy danh sách sản phẩm sắp hết hàng", 500);
+  }
+};
+// Xử lý đơn hàng hoàn trả
+export const returnOrder = async (req, res) => {
+  const { id } = req.params;
+  const session = await Order.startSession();
+  
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.error("Đơn hàng không tồn tại", 404);
+    }
+    
+    if (order.status !== "delivered") {
+      return res.error("Chỉ có thể hoàn trả đơn hàng đã giao", 400);
+    }
+
+    await session.startTransaction();
+    
+    // Cập nhật trạng thái đơn hàng
+    order.status = "returned";
+    await order.save({ session });
+    console.log(`Order ${id} status updated to returned`);
+
+    // Lấy chi tiết đơn hàng và hoàn kho
+    const details = await OrderDetail.find({ order_id: id }).session(session);
+    const restoreLog = [];
+    
+    for (const detail of details) {
+      if (detail.variant_id && detail.variant_id !== null) {
+        const variant = await ProductVariant.findById(detail.variant_id).session(session);
+        if (variant) {
+          const oldStock = variant.stock_quantity;
+          await ProductVariant.findByIdAndUpdate(
+            detail.variant_id,
+            { $inc: { stock_quantity: detail.quantity } },
+            { session }
+          );
+          restoreLog.push(`Variant ${variant.format}: ${oldStock} -> ${oldStock + detail.quantity} (+${detail.quantity})`);
+          console.log(`Restored variant stock: ${variant.format} +${detail.quantity}`);
+          
+          // Cập nhật trạng thái sản phẩm khi hoàn kho
+          await updateProductAvailability(detail.book_id, detail.variant_id);
+        }
+      } else {
+        const book = await Book.findById(detail.book_id).session(session);
+        if (book) {
+          const oldStock = book.stock_quantity;
+          await Book.findByIdAndUpdate(
+            detail.book_id,
+            { $inc: { stock_quantity: detail.quantity } },
+            { session }
+          );
+          restoreLog.push(`Book ${book.title}: ${oldStock} -> ${oldStock + detail.quantity} (+${detail.quantity})`);
+          console.log(`Restored book stock: ${book.title} +${detail.quantity}`);
+          
+          // Cập nhật trạng thái sản phẩm khi hoàn kho
+          await updateProductAvailability(detail.book_id);
+        }
+      }
+    }
+    
+    await session.commitTransaction();
+    console.log('Stock restoration completed:', restoreLog);
+
+    // Gửi email thông báo hoàn trả (không dùng transaction)
+    try {
+      const user = await UserModel.findById(order.user_id);
+      if (user && user.email) {
+        await sendOrderStatusEmail(order, user, "returned");
+        console.log('Return notification email sent to:', user.email);
+      }
+    } catch (emailError) {
+      console.error('Error sending return notification email:', emailError);
+    }
+
+    return res.success(
+      { 
+        data: order, 
+        restored_items: restoreLog.length,
+        message: "Hoàn kho thành công" 
+      }, 
+      "Đơn hàng đã hoàn trả và hoàn kho"
+    );
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('Return order error:', err);
+    return res.error("Lỗi khi hoàn trả đơn hàng", 500);
+  } finally {
+    await session.endSession();
   }
 };
