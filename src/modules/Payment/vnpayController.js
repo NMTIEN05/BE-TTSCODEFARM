@@ -42,7 +42,11 @@ export const vnpayController = {
       let orderInfo
       if (orderInfoString.length > 200) {
         // Lưu orderData vào session hoặc database tạm thời
-        orderInfo = `VNPAY_${orderId}_${orderData.user_id || 'GUEST'}`
+        orderInfo = `VNPAY_${orderId}_${orderData.user_id || 'GUEST'}_${encodeURIComponent(orderData.customer_name || '')}_${encodeURIComponent(orderData.shipping_address || '')}`
+        // Nếu vẫn quá dài, cắt bớt
+        if (orderInfo.length > 200) {
+          orderInfo = `VNPAY_${orderId}_${orderData.user_id || 'GUEST'}`
+        }
         // TODO: Lưu orderData vào Redis hoặc database tạm
       } else {
         orderInfo = orderInfoString
@@ -96,14 +100,35 @@ export const vnpayController = {
           console.log('Processing orderInfo:', orderInfo)
           
           if (orderInfo.startsWith('VNPAY_')) {
-            // Nếu là format VNPAY_orderId_userId
+            // Nếu là format VNPAY_orderId_userId_customerName_shippingAddress
             const parts = orderInfo.split('_')
             const userId = parts[2] !== 'GUEST' ? parts[2] : null
             console.log('Extracted userId from orderInfo:', userId)
             
+            // Lấy thông tin khách hàng và địa chỉ nếu có
+            let customerName = ''
+            let shippingAddress = ''
+            
+            if (parts.length > 3) {
+              try {
+                customerName = decodeURIComponent(parts[3])
+              } catch (e) {
+                console.error('Error decoding customer name:', e)
+              }
+            }
+            
+            if (parts.length > 4) {
+              try {
+                shippingAddress = decodeURIComponent(parts[4])
+              } catch (e) {
+                console.error('Error decoding shipping address:', e)
+              }
+            }
+            
             orderData = {
               user_id: userId,
-              shipping_address: 'VNPay Order - Chưa có địa chỉ chi tiết',
+              customer_name: customerName,
+              shipping_address: shippingAddress,
               shipping_fee: 0,
               tax: 0,
               details: [{
@@ -129,7 +154,8 @@ export const vnpayController = {
           console.log('Cannot parse orderInfo, using default:', error)
           orderData = {
             user_id: null,
-            shipping_address: 'Default Address',
+            shipping_address: '',
+            customer_name: 'Khách hàng',
             shipping_fee: 0,
             tax: 0,
             details: []
@@ -152,7 +178,7 @@ export const vnpayController = {
           tax: orderData.tax || 0,
           status: 'confirmed',
           customer_info: {
-            name: orderData.customer_name,
+            name: orderData.customer_name || (orderData.user_id ? 'Khách hàng đã đăng nhập' : 'Khách hàng'),
             phone: orderData.customer_phone,
             email: orderData.customer_email,
             note: orderData.note
