@@ -8,6 +8,7 @@ import {
   updateCoupon,
   restoreCoupon,
   forceDeleteCoupon,
+  validateCoupon
 } from "./couponController.js";
 
 const couponRouter = express.Router();
@@ -20,5 +21,6 @@ couponRouter.delete("/coupons/:id", deleteCoupon);
 couponRouter.patch("/coupons/:id/restore", restoreCoupon);
 couponRouter.delete("/coupons/:id/force", forceDeleteCoupon);
 couponRouter.patch("/coupons/toggle/:id", toggleCouponStatus);
+couponRouter.post("/coupons/validate", validateCoupon);
 
 export default couponRouter;

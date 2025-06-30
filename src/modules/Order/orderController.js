@@ -124,6 +124,8 @@ export const createOrder = async (req, res) => {
     status,
     details,
     coupons,
+    coupon_id,
+    discount_amount,
   } = req.body;
 
   const session = await Book.startSession();
