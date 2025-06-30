@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import UserModel from "./User.js";
 import { registerSchema, loginSchema } from "./auth.js";
 import { sendEmail } from "../../utils/sendMail.js";
-import { generateVerificationOTP } from "../../utils/emailVerification.js";
+import { generateVerificationOTP, generateRandomPassword } from "../../utils/emailVerification.js";
 import { FRONTEND_URL } from "../../configs/enviroments.js";
 
 async function register(req, res) {
@@ -207,4 +207,75 @@ async function resendVerificationEmail(req, res) {
 }
 
 
-export { register, updateUser, getUserById, getAllUsers, login, deleteUser, verifyEmail, resendVerificationEmail };
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email là bắt buộc" });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy tài khoản với email này" });
+    }
+
+    // Tạo mật khẩu mới ngẫu nhiên
+    const newPassword = generateRandomPassword();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Cập nhật mật khẩu mới
+    user.password = hashedPassword;
+    await user.save();
+
+    // Gửi email chứa mật khẩu mới
+    const emailSubject = "Mật khẩu mới cho tài khoản của bạn";
+    const emailText = `Chào ${user.fullname},\n\nMật khẩu mới của bạn là: ${newPassword}\n\nVui lòng đăng nhập và đổi mật khẩu ngay sau khi đăng nhập thành công.\n\nTrân trọng,\nĐội ngũ hỗ trợ`;
+    
+    await sendEmail(email, emailSubject, emailText);
+
+    res.json({ message: "Mật khẩu mới đã được gửi đến email của bạn" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function changePassword(req, res) {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    // Kiểm tra các trường bắt buộc
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Mật khẩu hiện tại và mật khẩu mới là bắt buộc" });
+    }
+
+    // Kiểm tra độ dài mật khẩu mới
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Mật khẩu mới phải có ít nhất 6 ký tự" });
+    }
+
+    // Tìm người dùng
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+    }
+
+    // Mã hóa và cập nhật mật khẩu mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+export { register, updateUser, getUserById, getAllUsers, login, deleteUser, verifyEmail, resendVerificationEmail, forgotPassword, changePassword };
