@@ -131,16 +131,42 @@ export const validateCartStock = async (req, res) => {
     const cart = await Cart.findOne({ user_id, status: "active" });
     if (!cart) return res.error("Giỏ hàng không tồn tại", 404);
 
-    const cartItems = await CartItem.find({ cart_id: cart._id }).populate("book_id");
+    const cartItems = await CartItem.find({ cart_id: cart._id })
+      .populate("book_id")
+      .populate("variant_id");
     const outOfStock = [];
 
     for (const item of cartItems) {
-      if (item.book_id.stock_quantity < item.quantity) {
+      let availableStock = 0;
+      let productName = item.book_id.title;
+      
+      if (item.variant_id) {
+        availableStock = item.variant_id.stock_quantity;
+        productName += ` (${item.variant_id.format})`;
+        
+        if (!item.variant_id.is_available) {
+          outOfStock.push({
+            book_id: item.book_id._id,
+            variant_id: item.variant_id._id,
+            product_name: productName,
+            requested: item.quantity,
+            available: 0,
+            reason: "Biến thể không có sẵn"
+          });
+          continue;
+        }
+      } else {
+        availableStock = item.book_id.stock_quantity;
+      }
+
+      if (availableStock < item.quantity) {
         outOfStock.push({
           book_id: item.book_id._id,
-          book_title: item.book_id.title,
+          variant_id: item.variant_id?._id || null,
+          product_name: productName,
           requested: item.quantity,
-          available: item.book_id.stock_quantity
+          available: availableStock,
+          reason: "Không đủ số lượng"
         });
       }
     }

@@ -8,6 +8,14 @@ const couponSchema = new mongoose.Schema(
     start_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
     is_active: { type: Boolean, default: true },
+    deleted_at: {
+      type: Date,
+      default: null,
+    },
+    deleted_at: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true, versionKey: false }
 );

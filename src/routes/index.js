@@ -4,11 +4,16 @@ import authorRouter from "../modules/Author/authorRoutes.js";
 import bookRouter from "../modules/Product/bookRoutes.js";
 import couponRouter from "../modules/Coupon/couponRoutes.js";
 import orderRouter from "../modules/Order/orderRoutes.js";
+import returnRequestRouter from "../modules/Order/returnRequestRoutes.js";
 import orderDetailRouter from "../modules/OrderDetail/orderDetailRoutes.js";
 import orderCouponRouter from "../modules/OrderCoupon/orderCouponRoutes.js";
 import bookReviewRouter from "../modules/ProductReview/bookReviewRoutes.js";
 import wishlistRouter from "../modules/WishList/wishlistRouter.js";
 import cartRouter from "../modules/Cart/cartRoutes.js";
+import variantRouter from "../modules/ProductVariant/productVariantRoutes.js";
+import flashSaleRouter from "../modules/FlashSale/flashSaleRoutes.js";
+import vnpayRouter from "../modules/Payment/vnpayRoutes.js";
+import contactRouter from "../modules/Contact/contact.routes.js";
 
 
 const router = express.Router();
@@ -33,6 +38,7 @@ router.use("", couponRouter);
 
 // Order routes
 router.use("", orderRouter);
+router.use("", returnRequestRouter);
 
 // Order Detail routes
 router.use("", orderDetailRouter);
@@ -48,5 +54,17 @@ router.use("/wishlist", wishlistRouter);
 
 // Cart routes
 router.use("", cartRouter);
+
+// Variant routes
+router.use("/variants", variantRouter);
+
+// Flash Sale routes
+router.use("/flashsales", flashSaleRouter);
+
+// VNPay routes
+router.use("/payment", vnpayRouter);
+
+// Contact routes
+router.use("/contact", contactRouter);
 
 export default router;

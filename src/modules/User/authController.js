@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import UserModel from "./User.js";
 import { registerSchema, loginSchema } from "./auth.js";
+import { sendEmail } from "../../utils/sendMail.js";
+import { generateVerificationOTP } from "../../utils/emailVerification.js";
+import { FRONTEND_URL } from "../../configs/enviroments.js";
 
 async function register(req, res) {
   try {
@@ -15,18 +18,32 @@ async function register(req, res) {
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Tạo OTP xác thực email
+    const verificationOTP = generateVerificationOTP();
+    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
     // Thêm user
     const newUser = {
       fullname,
       email,
       password: hashedPassword,
       phone,
-      isAdmin: isAdmin || false
+      isAdmin: isAdmin || false,
+      emailVerificationOTP: verificationOTP,
+      emailVerificationExpires: verificationExpires
     };
     const userCreated = await UserModel.create(newUser);
 
-    // Remove password trong response
-    res.json({ ...userCreated.toObject(), password: undefined });
+    // Gửi email chứa OTP
+    const emailSubject = "Mã xác thực tài khoản";
+    const emailText = `Chào ${fullname},\n\nMã xác thực tài khoản của bạn là: ${verificationOTP}\n\nMã có hiệu lực trong 10 phút.`;
+    
+    await sendEmail(email, emailSubject, emailText);
+
+    res.json({ 
+      message: "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác thực.",
+      user: { ...userCreated.toObject(), password: undefined, emailVerificationOTP: undefined }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -109,6 +126,11 @@ async function login(req, res) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
 
+    // Kiểm tra email đã xác thực chưa
+    if (!user.isEmailVerified) {
+      return res.status(401).json({ message: "Vui lòng xác thực email trước khi đăng nhập" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
@@ -126,5 +148,63 @@ async function login(req, res) {
   }
 }
 
+async function verifyEmail(req, res) {
+  try {
+    const { email, otp } = req.body;
 
-export { register, updateUser, getUserById, getAllUsers, login, deleteUser };
+    const user = await UserModel.findOne({
+      email,
+      emailVerificationOTP: otp,
+      emailVerificationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Mã OTP không hợp lệ hoặc đã hết hạn" });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Xác thực email thành công! Bạn có thể đăng nhập ngay bây giờ." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function resendVerificationEmail(req, res) {
+  try {
+    const { email } = req.body;
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy tài khoản" });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: "Tài khoản đã được xác thực" });
+    }
+
+    // Tạo OTP mới
+    const verificationOTP = generateVerificationOTP();
+    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.emailVerificationOTP = verificationOTP;
+    user.emailVerificationExpires = verificationExpires;
+    await user.save();
+
+    // Gửi email chứa OTP
+    const emailSubject = "Mã xác thực tài khoản";
+    const emailText = `Chào ${user.fullname},\n\nMã xác thực tài khoản của bạn là: ${verificationOTP}\n\nMã có hiệu lực trong 10 phút.`;
+    
+    await sendEmail(email, emailSubject, emailText);
+
+    res.json({ message: "Email xác thực đã được gửi lại" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+
+export { register, updateUser, getUserById, getAllUsers, login, deleteUser, verifyEmail, resendVerificationEmail };

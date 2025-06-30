@@ -1,13 +1,13 @@
 import Cart from "../Cart/Cart.js";
 import CartItem from "./CartItem.js";
 import Book from "../Product/Book.js";
+import ProductVariant from "../ProductVariant/ProductVariant.js";
 import UserModel from "../User/User.js";
 import { cartItemValidate } from "./cartItemValidate.js";
 
 // Thêm sách vào giỏ hàng
 export const addToCart = async (req, res) => {
-  const { user_id,book_id, quantity } = req.body;
-//   const user_id = req.user.id; // Lấy từ middleware xác thực (JWT)
+  const { user_id, book_id, variant_id, quantity } = req.body;
 
   try {
     // Validate đầu vào
@@ -26,9 +26,36 @@ export const addToCart = async (req, res) => {
       return res.error("Người dùng hoặc sách không tồn tại", 404);
     }
 
+    let availableStock = 0;
+    let price = book.price;
+    let variant = null;
+
+    // Kiểm tra biến thể nếu có
+    if (variant_id) {
+      variant = await ProductVariant.findById(variant_id);
+      if (!variant || variant.book_id.toString() !== book_id) {
+        return res.error("Biến thể sản phẩm không tồn tại hoặc không thuộc sách này", 404);
+      }
+      if (!variant.is_available) {
+        return res.error("Biến thể sản phẩm hiện không có sẵn", 400);
+      }
+      availableStock = variant.stock_quantity;
+      price = variant.price;
+    } else {
+      availableStock = book.stock_quantity;
+    }
+
     // Kiểm tra số lượng tồn kho
-    if (book.stock_quantity < quantity) {
-      return res.error("Sách không đủ số lượng trong kho", 400);
+    if (availableStock < quantity) {
+      return res.error(
+        `Sản phẩm không đủ số lượng trong kho. Còn lại: ${availableStock}`,
+        400,
+        { availableStock }
+      );
+    }
+
+    if (availableStock === 0) {
+      return res.error("Sản phẩm đã hết hàng", 400);
     }
 
     // Tìm hoặc tạo giỏ hàng
@@ -41,22 +68,44 @@ export const addToCart = async (req, res) => {
       });
     }
 
-    // Kiểm tra xem sách đã có trong giỏ hàng chưa
-    let cartItem = await CartItem.findOne({ cart_id: cart._id, book_id });
+    // Kiểm tra xem sản phẩm (với biến thể) đã có trong giỏ hàng chưa
+    const query = { cart_id: cart._id, book_id };
+    if (variant_id) {
+      query.variant_id = variant_id;
+    } else {
+      query.variant_id = { $exists: false };
+    }
+
+    let cartItem = await CartItem.findOne(query);
     if (cartItem) {
-      // Cập nhật số lượng
-      cartItem.quantity += quantity;
-      cartItem.price = book.price;
+      // Kiểm tra tổng số lượng sau khi cộng
+      const newQuantity = cartItem.quantity + quantity;
+      if (newQuantity > availableStock) {
+        return res.error(
+          `Tổng số lượng vượt quá tồn kho. Còn lại: ${availableStock}, trong giỏ: ${cartItem.quantity}`,
+          400,
+          { availableStock, currentInCart: cartItem.quantity }
+        );
+      }
+      cartItem.quantity = newQuantity;
+      cartItem.price = price;
       await cartItem.save();
     } else {
       // Thêm mới sản phẩm vào giỏ
       cartItem = await CartItem.create({
         cart_id: cart._id,
         book_id,
+        variant_id: variant_id || null,
         quantity,
-        price: book.price,
+        price,
         added_at: new Date(),
       });
+    }
+
+    // Populate thông tin để trả về
+    await cartItem.populate('book_id');
+    if (variant_id) {
+      await cartItem.populate('variant_id');
     }
 
     return res.success({ data: cartItem }, "Thêm vào giỏ hàng thành công");

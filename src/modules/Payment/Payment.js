@@ -10,4 +10,4 @@ const paymentSchema = new mongoose.Schema({
 }, { versionKey: false });
 
 const Payment = mongoose.model("Payment", paymentSchema);
- export default Payment
+export default Payment

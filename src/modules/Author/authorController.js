@@ -9,6 +9,7 @@ export const getAuthors = async (req, res) => {
     name,
     sortBy = "createdAt",
     order = "desc",
+    includeDeleted = false,
   } = req.query;
 
   const page = Math.max(parseInt(offset), 0);
@@ -17,6 +18,13 @@ export const getAuthors = async (req, res) => {
   const query = {};
   if (name) {
     query.name = { $regex: name, $options: "i" };
+  }
+
+  // Lọc theo trạng thái xóa
+  if (includeDeleted === 'true') {
+    query.deleted_at = { $ne: null };
+  } else {
+    query.deleted_at = { $eq: null };
   }
 
   const sortOrder = order === "asc" ? 1 : -1;
@@ -49,12 +57,12 @@ export const getAuthors = async (req, res) => {
 export const getAuthorById = async (req, res) => {
   const { id } = req.params;
   try {
-    const author = await Authors.findById(id);
+    const author = await Authors.findOne({ _id: id, deleted_at: null });
     if (!author) {
       return res.error("Không tìm thấy tác giả", 404);
     }
 
-    const books = await Book.find({ author_id: id }).populate("author_id");
+    const books = await Book.find({ author_id: id, deleted_at: null }).populate("author_id");
 
     return res.success(
       { data: { ...author.toObject(), books } },
@@ -69,33 +77,67 @@ export const getAuthorById = async (req, res) => {
 export const deleteAuthor = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedAuthor = await Authors.findOneAndDelete({ _id: id });
+    const deletedAuthor = await Authors.findOneAndUpdate(
+      { _id: id, deleted_at: null },
+      { deleted_at: new Date() },
+      { new: true }
+    );
+
     if (!deletedAuthor) {
       return res.error("Không tìm thấy tác giả", 404);
     }
 
-    let unknownAuthor = await Authors.findOne({ name: "Không xác định" });
-    if (!unknownAuthor) {
-      unknownAuthor = await new Authors({
-        name: "Không xác định",
-        nationality: "Không rõ",
-        birth_date: new Date("1900-01-01"),
-        bio: "Tác giả mặc định khi tác giả gốc bị xoá",
-      }).save();
-    }
-
-    await Book.updateMany(
-      { author_id: id },
-      { $set: { author_id: unknownAuthor._id } }
-    );
-
     return res.success(
-      { author: unknownAuthor },
-      "Xoá tác giả thành công và đã chuyển sách sang tác giả 'Không xác định'"
+      { data: deletedAuthor },
+      "Xóa tác giả thành công"
     );
   } catch (error) {
     console.error(error);
-    return res.error("Xoá tác giả thất bại");
+    return res.error("Xóa tác giả thất bại");
+  }
+};
+
+// Khôi phục tác giả
+export const restoreAuthor = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const restoredAuthor = await Authors.findOneAndUpdate(
+      { _id: id, deleted_at: { $ne: null } },
+      { deleted_at: null },
+      { new: true }
+    );
+
+    if (!restoredAuthor) {
+      return res.error("Không tìm thấy tác giả đã xóa", 404);
+    }
+
+    return res.success(
+      { data: restoredAuthor },
+      "Khôi phục tác giả thành công"
+    );
+  } catch (error) {
+    return res.error("Lỗi server khi khôi phục tác giả", 500);
+  }
+};
+
+// Xóa vĩnh viễn tác giả
+export const forceDeleteAuthor = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const author = await Authors.findOneAndDelete({ _id: id, deleted_at: { $ne: null } });
+
+    if (!author) {
+      return res.error("Không tìm thấy tác giả đã xóa", 404);
+    }
+
+    return res.success(
+      { data: author },
+      "Xóa vĩnh viễn tác giả thành công"
+    );
+  } catch (error) {
+    console.error(error);
+    return res.error("Xóa vĩnh viễn tác giả thất bại");
   }
 };
 
@@ -138,7 +180,7 @@ export const updateAuthor = async (req, res) => {
     }
 
     const updatedAuthor = await Authors.findOneAndUpdate(
-      { _id: id },
+      { _id: id, deleted_at: null },
       { $set: req.body },
       { new: true }
     );
