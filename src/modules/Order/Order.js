@@ -19,6 +19,12 @@ const orderSchema = new mongoose.Schema(
     payment_method: { type: String, required: true },
     shipping_fee: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
+    coupon_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+      required: false,
+    },
+    discount_amount: { type: Number, default: 0 },
     customer_info: {
       name: { type: String },
       phone: { type: String },
